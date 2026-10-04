@@ -53,6 +53,12 @@ The web app and the phone app are made from the same code. Both connect to the s
 
 ## Part 1: Tasks
 
+### Important: read this first
+
+- **Dev A deploys and hosts the web app.** Dev A owns the repo and the server, so one person holds the production keys and controls what goes live (task A3). Dev B's web trial (B1) picks the host: Vercel or Expo's own hosting.
+- **Dev A starts the phone app.** The web app and the phone app are the same Expo project, so it is started only once, in A1. Dev A also makes the first installable phone app (A10). After that, Dev B adds the camera.
+- **The web app is built with Expo (React Native), using its web version. Not Next.js.** One codebase becomes the web app, the Android app and the iPhone app. Next.js is only the fallback if the web trial (B1) fails.
+
 Three lists: what you do together, what Dev A does, what Dev B does. Inside each list the tasks are in the order to do them, first to last.
 
 Every task has the same labels:
@@ -116,7 +122,7 @@ Words used in the labels:
 - Type: Project setup (folders and settings)
 - Where it runs: The GitHub repo
 - Tools: Git, GitHub (branch protection), Expo, pnpm workspaces
-- What it means: Create the folders: `apps/app` (the one app for web and phone), `packages/shared` (data shapes and schedule code), `supabase` (database and server code). Protect `main` so changes only arrive by pull request.
+- What it means: Start the one Expo project that becomes both the web app and the phone app. Create the folders: `apps/app` (the one app for web and phone), `packages/shared` (data shapes and schedule code), `supabase` (database and server code). Protect `main` so changes only arrive by pull request.
 - Done when: Dev B can clone, install, and see the empty app in a browser.
 - Needs first: T1
 
@@ -128,7 +134,15 @@ Words used in the labels:
 - Done when: Tables exist, a test row can be saved and read back, and one test user cannot read another's row.
 - Needs first: T1, A1
 
-**A3. Exam screen**
+**A3. Put the web app online**
+- Type: Deployment setup (settings, no product code)
+- Where it runs: The web host
+- Tools: The host chosen in B1 (Vercel or Expo hosting), GitHub
+- What it means: Connect the repo to the web host so that every change merged into `main` goes live by itself. Dev A does this because Dev A owns the repo and holds the production keys. From here on there is always a real web address to test on.
+- Done when: The empty app opens at a public web address, and a merged change shows up there without anyone uploading by hand.
+- Needs first: A1, B1
+
+**A4. Exam screen**
 - Type: App screen (a page)
 - Where it runs: Web app and phone app
 - Tools: Expo (React Native), Supabase database
@@ -136,23 +150,23 @@ Words used in the labels:
 - Done when: An exam can be added, edited, deleted, and is still there after reloading.
 - Needs first: A2
 
-**A4. Syllabus reader**
+**A5. Syllabus reader**
 - Type: Server function (an API) plus a confirm screen
 - Where it runs: Server, with one screen in the app
 - Tools: Supabase Edge Function, Claude API, Expo
 - What it means: The student uploads a syllabus. The AI finds the exam and quiz dates and the topics for each. The student sees the list and confirms or fixes every date before anything is saved. If no dates are found, it says so and offers typing them in.
 - Done when: A real syllabus produces the right dates on the confirm screen, and a file with no dates produces a clear message, not a guess.
-- Needs first: A3
+- Needs first: A4
 
-**A5. Schedule engine**
+**A6. Schedule engine**
 - Type: Code function (pure logic) with automatic tests
 - Where it runs: Shared code, run by the server
 - Tools: TypeScript, Vitest (test runner), Supabase database to save the plan
 - What it means: Plain code (no AI) that takes exam dates and topics and returns a list of dated study sessions. Sessions get closer together as the exam gets near. Each session has 5 to 7 questions. The plan is saved on the server so web and phone show the same one.
 - Done when: Given "exam in 14 days", it returns a plan ending on exam day. Tests cover: exam tomorrow, exam in 3 months, two exams in the same week, exam already past.
-- Needs first: A3
+- Needs first: A4
 
-**A6. Question maker**
+**A7. Question maker**
 - Type: Server function (an API)
 - Where it runs: Server
 - Tools: Supabase Edge Function, Claude API, Supabase database
@@ -160,25 +174,25 @@ Words used in the labels:
 - Done when: 10 pages of notes produce at least 20 questions, each with a working link to its source text. Questions without a real source are thrown away.
 - Needs first: B3 (real notes to read)
 
-**A7. Send to calendar**
+**A8. Send to calendar**
 - Type: Server function (a calendar link) plus a button in the app
 - Where it runs: Server, with one button in the app
 - Tools: Supabase Edge Function, the iCalendar (`.ics`) format, Expo
 - What it means: The student adds their Cramrade sessions and exam dates to their Google or Apple calendar. Cramrade only sends. It never reads the calendar.
 - Done when: On a test account, sessions and exam dates show up in Google Calendar and in Apple Calendar.
-- Needs first: A5
+- Needs first: A6
 
-**A8. Quiz server**
+**A9. Quiz server**
 - Type: Server functions (APIs) plus a live channel
 - Where it runs: Server
 - Tools: Supabase Edge Functions, Supabase Realtime, Supabase database
 - What it means: The live game: create a room, hand out a join link, send each question to everyone at the same time, run the timer, count the score. Questions go out through Supabase's live messaging. The server writes down when each question started and scores every answer against that time, so nobody can cheat.
 - Done when: 5 browsers join one room, play 5 questions, and all show the same final scores.
-- Needs first: A6
+- Needs first: A7
 
 **Phase 2: phone app**
 
-**A9. First phone build**
+**A10. First phone build**
 - Type: App build (an installable Android app)
 - Where it runs: Phone
 - Tools: Expo EAS Build, a real Android phone
@@ -186,29 +200,29 @@ Words used in the labels:
 - Done when: The app opens on an Android phone, sign-in works, and the schedule and study screens work as on the web.
 - Needs first: T4
 
-**A10. Alarms and notifications**
+**A11. Alarms and notifications**
 - Type: Phone feature (code inside the app)
 - Where it runs: Phone app only
 - Tools: Expo notifications
 - What it means: The phone shows a notification when a session is due, even if the app is closed. Only the next two weeks are set at a time (iPhone allows 64 at once), and they refresh each time the app opens.
 - Done when: A reminder fires within a few minutes of its time on a real Android phone with the app closed.
-- Needs first: A9
+- Needs first: A10
 
-**A11. iPhone build**
+**A12. iPhone build**
 - Type: App build (an installable iPhone app)
 - Where it runs: Phone
 - Tools: Expo EAS Build, Apple Developer account, a real iPhone
 - What it means: Buy the Apple developer account, build the iPhone app, and check camera and reminders on a real iPhone.
-- Done when: The app runs on a real iPhone and B8, B9 and A10 pass there too.
-- Needs first: A10, B9
+- Done when: The app runs on a real iPhone and B8, B9 and A11 pass there too.
+- Needs first: A11, B9
 
-**A12. Cited lesson**
+**A13. Cited lesson**
 - Type: Server function (an API) plus a screen
 - Where it runs: Server, with one screen in the app
 - Tools: Supabase Edge Function, Claude API, Expo
 - What it means: A 5 to 10 minute explanation of one topic where every sentence links to the note it came from.
 - Done when: A lesson shows only sentences whose source was verified by code.
-- Needs first: A6
+- Needs first: A7
 
 ### Dev B: capture and screens
 
@@ -245,8 +259,8 @@ Words used in the labels:
 - Where it runs: Web app and phone app
 - Tools: Expo, Supabase database
 - What it means: A screen showing the plan: which sessions are today, which are coming, and which exam each belongs to.
-- Done when: The plan from A5 shows correctly and updates when an exam date changes.
-- Needs first: A5 (use a fake plan until it is ready)
+- Done when: The plan from A6 shows correctly and updates when an exam date changes.
+- Needs first: A6 (use a fake plan until it is ready)
 
 **B5. Study screen**
 - Type: App screen (a page)
@@ -254,7 +268,7 @@ Words used in the labels:
 - Tools: Expo, Supabase database
 - What it means: One screen used two ways. Scheduled: today's session of 5 to 7 questions. On demand: the student starts flashcards or a quick quiz whenever they want. Shows right or wrong, and a "show me where this is in my notes" button.
 - Done when: A scheduled session and an on-demand review can both be played with real questions, and results are saved.
-- Needs first: A6 (use fake questions until it is ready)
+- Needs first: A7 (use fake questions until it is ready)
 
 **B6. Host and play screens**
 - Type: Two app screens (host page and play page)
@@ -262,7 +276,7 @@ Words used in the labels:
 - Tools: Expo, Supabase Realtime, Supabase Auth (guest sign-in)
 - What it means: The host screen (question, timer, scoreboard) for a computer. The play screen where a classmate opens the link, picks a nickname and answers. Guests need no account and no install.
 - Done when: A person with only a browser joins and finishes a quiz. A player who drops out can rejoin and keep their score.
-- Needs first: A8
+- Needs first: A9
 
 **B7. Handwriting trial**
 - Type: Trial (a written result, no product code)
@@ -280,7 +294,7 @@ Words used in the labels:
 - Tools: Expo camera
 - What it means: A camera screen where the student takes many photos in a row, sees small previews, can delete a bad one, then presses Submit once. Nothing is processed before Submit.
 - Done when: 10 photos can be taken, one removed, and 9 submitted together. Nothing appears in the phone's gallery.
-- Needs first: A9
+- Needs first: A10
 
 **B9. Photo to text, then delete**
 - Type: Phone feature plus a server function
@@ -296,15 +310,15 @@ Words used in the labels:
 - Tools: Google Play Console
 - What it means: Sign up 12 testers for the Google Play closed test and keep them in for 14 days in a row. Google requires this for new accounts before public release.
 - Done when: 12 testers opted in for 14 unbroken days.
-- Needs first: A9
+- Needs first: A10
 
 ### Where the two lists meet
 
-- **A5 and B4:** Dev B's schedule screen shows Dev A's plan.
-- **B3 and A6:** Dev A's question maker reads the notes Dev B's upload saved.
-- **A6 and B5:** Dev B's study screen shows the questions Dev A made.
-- **A8 and B6:** Dev B's quiz screens talk to Dev A's quiz server. Agree on the messages between them before either starts.
-- **A9 and B8:** Dev A's first phone build must exist before Dev B starts the camera.
+- **A6 and B4:** Dev B's schedule screen shows Dev A's plan.
+- **B3 and A7:** Dev A's question maker reads the notes Dev B's upload saved.
+- **A7 and B5:** Dev B's study screen shows the questions Dev A made.
+- **A9 and B6:** Dev B's quiz screens talk to Dev A's quiz server. Agree on the messages between them before either starts.
+- **A10 and B8:** Dev A's first phone build must exist before Dev B starts the camera.
 
 Timing: phase 1 is about 4 weeks of full-time work. Phase 2 is not estimated yet. Part-time, everything takes longer. These are guesses, not promises.
 
