@@ -21,7 +21,7 @@ Two things set it apart, and changes should protect them: review scheduled aroun
 - **Claude API** reads syllabuses, writes questions and lessons, and reads handwriting. It is called only from Edge Functions, never from the app.
 - **TypeScript everywhere.**
 
-Planned layout:
+Planned layout (the full folder map and the setup commands are in `project-initialize.md`):
 
 - `apps/app`: the one Expo app. Screens are shared by web and phone. Phone-only: camera, alarms. Web-only: the quiz host screen.
 - `packages/shared`: data shapes (Exam, Topic, Note, Chunk, Question, Session, Quiz) and the schedule engine. No screen code and no network code, so it can be tested alone.
