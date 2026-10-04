@@ -81,21 +81,21 @@ Words used in the labels:
 
 **Focus: agree on the rules before splitting up, and test with real students at the end of phase 1.**
 
-**T1. Agree on the data shapes**
+**T1. Agree on the data shapes** PARTIALLY
 - Type: Code file (the list of data shapes)
 - Where it runs: Shared by the web app, the phone app and the server
 - Tools: TypeScript
 - What it means: Sit together and write down what an Exam, a Topic, a Note, a Question, a Study Session and a Quiz look like (which fields each has). Example: an Exam has a name, a date and a list of topics. Both sides build against these, so nobody waits for the other.
 - Done when: The shapes are in `packages/shared` and both of you have said yes.
 
-**T2. Create the accounts**
+**T2. Create the accounts** DONE
 - Type: Setup, no code
 - Where it runs: Outside the repo, on each service's website
 - Tools: Supabase dashboard, Expo account, Claude Console (for the API key), a web hosting account, `.env` files
 - What it means: Supabase project (the paid one), Expo, Claude API key, and a place to host the web app. Google Play and Apple accounts wait until phase 2.
 - Done when: Both of you can log in to each one. Keys are in `.env` files that are not in git.
 
-**T3. Write the shared `CLAUDE.md`**
+**T3. Write the shared `CLAUDE.md`** DONE
 - Type: Document file
 - Where it runs: The repo's top folder
 - Tools: Markdown (`.md` file)
@@ -118,7 +118,7 @@ Words used in the labels:
 
 **Phase 1: web app**
 
-**A1. Set up the repo**
+**A1. Set up the repo** DONE
 - Type: Project setup (folders and settings)
 - Where it runs: The GitHub repo
 - Tools: Git, GitHub (branch protection), Expo, pnpm workspaces
