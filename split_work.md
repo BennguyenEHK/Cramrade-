@@ -14,7 +14,7 @@ The plan has two phases:
 
 One task = one branch = one pull request.
 
-The full design is in `docs/superpowers/specs/2026-10-03-cramrade-design.md`.
+The full design is in `docs/superpowers/specs/2026-10-03-cramrade-design.md`. That file is not in the repo yet; Dev A has it.
 
 ---
 
@@ -61,6 +61,8 @@ The web app and the phone app are made from the same code. Both connect to the s
 
 Three lists: what you do together, what Dev A does, what Dev B does. Inside each list the tasks are in the order to do them, first to last.
 
+A task marked **DONE** or **PARTIALLY** after its title has a **Status** line saying what was done, when, and what is left.
+
 Every task has the same labels:
 
 - **Type:** the form the finished work takes. A page, a server function, a database table, a document, a trial, and so on.
@@ -82,6 +84,7 @@ Words used in the labels:
 **Focus: agree on the rules before splitting up, and test with real students at the end of phase 1.**
 
 **T1. Agree on the data shapes** PARTIALLY
+- Status: Started. `packages/shared/src/types/` exists but is empty until the shapes are written down and both have agreed.
 - Type: Code file (the list of data shapes)
 - Where it runs: Shared by the web app, the phone app and the server
 - Tools: TypeScript
@@ -89,6 +92,7 @@ Words used in the labels:
 - Done when: The shapes are in `packages/shared` and both of you have said yes.
 
 **T2. Create the accounts** DONE
+- Status: Supabase project `cramrade` created (region US East, Ohio), Expo and Claude accounts exist, GitHub is linked to Expo and Supabase. Open point on 2026-10-05: the Supabase organization is on the free plan, which pauses the project after 7 idle days. Upgrade or move it.
 - Type: Setup, no code
 - Where it runs: Outside the repo, on each service's website
 - Tools: Supabase dashboard, Expo account, Claude Console (for the API key), `.env` files
@@ -119,9 +123,10 @@ Words used in the labels:
 **Phase 1: web app**
 
 **A1. Set up the repo** DONE
+- Status: Done 2026-10-05 on branch `a1-repo-setup`, pull request waiting for review and merge into `main`. Expo app, shared package, Supabase folder, npm workspace, scripts, `.gitignore`, `.env.example`. Supabase command-line tool is linked to the project on Dev A's computer.
 - Type: Project setup (folders and settings)
 - Where it runs: The GitHub repo
-- Tools: Git, GitHub (branch protection), Expo, pnpm workspaces
+- Tools: Git, GitHub (branch protection), Expo, npm workspaces
 - What it means: Start the one Expo project that becomes both the web app and the phone app. Create the folders: `apps/app` (the one app for web and phone), `packages/shared` (data shapes and schedule code), `supabase` (database and server code). Protect `main` so changes only arrive by pull request.
 - Done when: Dev B can clone, install, and see the empty app in a browser.
 - Needs first: T1
@@ -222,12 +227,13 @@ Words used in the labels:
 
 **Phase 1: web app**
 
-**B1. Web trial**
+**B1. Web trial** PARTIALLY
+- Status: During A1 the Expo web version was started in a browser and built for hosting, so the basics work. Still to test: uploading a PDF and a wide full-screen layout.
 - Type: Trial (a throwaway test page and a short written result)
 - Where it runs: Web
 - Tools: Expo web, Chrome
 - What it means: We chose one codebase for web and phone (Expo). Before building on it, check its web version can do the two web-only jobs: upload a PDF, and show a wide full-screen layout for hosting a quiz. **This is the most important early task.** If it fails, the web app is built separately with Next.js.
-- Done when: A test page in Chrome uploads a PDF and shows a full-width screen. A short note says "works" or "does not work, because"
+- Done when: A test page in Chrome uploads a PDF and shows a full-width screen. A short note says "works" or "does not work, because".
 - Needs first: A1
 
 **B2. Sign-in**
