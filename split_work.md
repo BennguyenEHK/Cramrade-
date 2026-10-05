@@ -141,7 +141,7 @@ Words used in the labels:
 - Needs first: T1, A1
 
 **A3. Put the web app online** PARTIALLY
-- Status: App shell, theme, homepage, placeholder screens and EAS deploy files are merged into `main` (2026-10-05). Left: Dev A logs in to Expo, runs `eas init` and the first `eas deploy --prod`, and connects the GitHub repo in the Expo dashboard (base directory `apps/app`). See `apps/app/README.md`, Deployment.
+- Status: Live at https://cramrade.expo.app since 2026-10-05 (Expo project `@cramrade/cramrade`). App shell, theme, homepage, placeholder screens and deploy files are in `main`. Left: connect the GitHub repo in the Expo dashboard (project Settings, GitHub, base directory `apps/app`) so a merge into `main` deploys by itself, then validate `.eas/workflows/deploy.yml`. Until then, deploy by hand with the commands in `apps/app/README.md`.
 - Type: Deployment setup (settings, no product code)
 - Where it runs: The web host
 - Tools: Expo hosting (EAS Hosting), Expo workflows, GitHub
