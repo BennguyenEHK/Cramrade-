@@ -123,7 +123,7 @@ Words used in the labels:
 **Phase 1: web app**
 
 **A1. Set up the repo** DONE
-- Status: Done 2026-10-05 on branch `a1-repo-setup`, pull request waiting for review and merge into `main`. Expo app, shared package, Supabase folder, npm workspace, scripts, `.gitignore`, `.env.example`. Supabase command-line tool is linked to the project on Dev A's computer.
+- Status: Done 2026-10-05, merged into `main`. Expo app, shared package, Supabase folder, npm workspace, scripts, `.gitignore`, `.env.example`. Supabase command-line tool is linked to the project on Dev A's computer.
 - Type: Project setup (folders and settings)
 - Where it runs: The GitHub repo
 - Tools: Git, GitHub (branch protection), Expo, npm workspaces
@@ -131,7 +131,8 @@ Words used in the labels:
 - Done when: Dev B can clone, install, and see the empty app in a browser.
 - Needs first: T1
 
-**A2. Create the database tables**
+**A2. Create the database tables** DONE
+- Status: Done 2026-10-05, merged into `main`. 16 tables with Row Level Security applied to the live project with `supabase db push`. Two-user test passed: one user cannot read another's exam; profiles are created by trigger. The T1 proposal for Dev B is in `packages/shared/README.md`.
 - Type: Database tables and access rules
 - Where it runs: Server
 - Tools: Supabase Postgres database, SQL migration files, Supabase Row Level Security
@@ -139,7 +140,8 @@ Words used in the labels:
 - Done when: Tables exist, a test row can be saved and read back, and one test user cannot read another's row.
 - Needs first: T1, A1
 
-**A3. Put the web app online**
+**A3. Put the web app online** PARTIALLY
+- Status: App shell, theme, homepage, placeholder screens and EAS deploy files are merged into `main` (2026-10-05). Left: Dev A logs in to Expo, runs `eas init` and the first `eas deploy --prod`, and connects the GitHub repo in the Expo dashboard (base directory `apps/app`). See `apps/app/README.md`, Deployment.
 - Type: Deployment setup (settings, no product code)
 - Where it runs: The web host
 - Tools: Expo hosting (EAS Hosting), Expo workflows, GitHub
