@@ -1,0 +1,18 @@
+# Puts the web app live on EAS Hosting every time main changes.
+# Runs on Expo's servers once the GitHub repo is connected to the Expo project
+# (see apps/app/README.md, "Deployment"). Test by hand with:
+#   npx eas-cli@latest workflow:run .eas/workflows/deploy.yml
+# Schema: https://docs.expo.dev/eas/workflows/syntax.md ("deploy" job type)
+name: Deploy web app
+
+on:
+  push:
+    branches: ['main']
+
+jobs:
+  deploy:
+    name: Deploy to production
+    type: deploy
+    environment: production
+    params:
+      prod: true

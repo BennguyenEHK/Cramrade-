@@ -1,0 +1,16 @@
+# Deploys a preview address for every pull request and posts the link on the PR,
+# so the reviewer can click through the change before merging.
+# Schema: https://docs.expo.dev/eas/hosting/workflows.md
+name: PR preview
+
+on:
+  pull_request: {}
+
+jobs:
+  deploy:
+    name: Deploy PR preview
+    type: deploy
+
+  comment:
+    needs: [deploy]
+    type: github-comment

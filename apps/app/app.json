@@ -1,18 +1,15 @@
 {
   "expo": {
-    "name": "app",
-    "slug": "app",
+    "name": "Cramrade",
+    "slug": "cramrade",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "app",
+    "scheme": "cramrade",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "icon": "./assets/expo.icon"
-    },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#17202A",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -21,6 +18,12 @@
     },
     "web": {
       "output": "static",
+      "name": "Cramrade",
+      "shortName": "Cramrade",
+      "lang": "en",
+      "description": "A study plan built from your exam dates and your own notes.",
+      "themeColor": "#17202A",
+      "backgroundColor": "#F4F6F2",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -28,9 +31,12 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#F4F6F2",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 96,
+          "dark": {
+            "backgroundColor": "#111821"
+          }
         }
       ],
       "expo-sqlite"

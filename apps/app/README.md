@@ -1,56 +1,73 @@
-# Welcome to your Expo app 👋
+# Cramrade app
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+The one Expo app that becomes the web app, the Android app and the iPhone app. Cramrade takes a student's exam dates and their own notes, builds a study plan that ends on exam day, reminds them, quizzes them from their notes, and lets a study group play a live quiz.
 
-## Get started
+Project rules, who owns what, and the task list are in the repo's top folder: `CLAUDE.md`, `split_work.md`, `project-initialize.md`. Expo's own rules for AI tools are in `AGENTS.md` here.
 
-1. Install dependencies
+## Run it
 
-   ```bash
-   npm install
-   ```
+From the repo's top folder:
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```sh
+npm install
+npm run web          # dev server at http://localhost:8081
+npm run typecheck
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+From this folder:
 
-### Other setup steps
+```sh
+npx expo install <package>          # add a dependency, never plain npm install
+npx expo export --platform web      # production web build into dist/
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Copy `.env.example` to `.env` and fill in the two Supabase values. Never commit `.env`.
 
-## Learn more
+## Where things are
 
-To learn more about developing your project with Expo, look at the following resources:
+- `src/app/`: one file per screen (Expo Router). Screens stay thin and only put pieces together.
+  - `_layout.tsx`: the app shell. Loads the fonts, picks light or dark, draws the top bar.
+  - `index.tsx`: the public homepage.
+  - `workspace.tsx` and `sign-in.tsx`: placeholders. See below.
+- `src/components/frame/`: the shell pieces. Top bar, wordmark, page body with footer, section, content column, page title.
+- `src/components/home/`: the homepage sections. Hero with the day strip, how it works, what makes it different, closing.
+- `src/components/ui/`: `AppText` (the only text component) and `LinkButton`.
+- `src/constants/theme.ts`: every color, font, size, spacing and radius. Change the look here, not in screens. `DESIGN.md` explains the choices.
+- `src/hooks/`: `useTheme` (colors for the current scheme), `useLayout` (phone or wide), `useColorScheme`.
+- `src/global.css`: web-only base styles, including the keyboard focus ring.
+- `assets/images/`: app icon, favicon, splash image and Android icon layers. All generated from the same mark (the day strip in miniature).
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Fonts come from `@expo-google-fonts/bricolage-grotesque` (headlines) and `@expo-google-fonts/atkinson-hyperlegible` (everything else), loaded with `useFonts` in `_layout.tsx`. In Expo SDK 57 each weight is its own font family name, so text styles pick a family and never set `fontWeight`.
 
-## Join the community
+One thing that bites: a child of `<Link asChild>` must get a single flat style object. Link merges styles with an object spread, so a style array throws and a style function is silently dropped. `LinkButton` and the top bar show the pattern.
 
-Join our community of developers creating universal apps.
+## Placeholders for Dev B
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Two routes exist so the navigation works, but hold no real feature. Replace the whole file, keep the route name:
+
+- `src/app/sign-in.tsx`: becomes real sign-up and sign-in with Supabase Auth (task B2).
+- `src/app/workspace.tsx`: becomes the signed-in area with exams, notes, schedule and study (tasks B3 to B7).
+
+Both render `src/components/frame/placeholder.tsx`, which can be deleted once neither route uses it.
+
+## Deployment (Dev A)
+
+The web app is hosted on EAS Hosting. `eas.json` and `.eas/workflows/` are set up; the Expo project itself is created on first use.
+
+One-time setup, from this folder:
+
+```sh
+npx eas-cli@latest login
+npx eas-cli@latest init                       # creates the Expo project and writes extra.eas.projectId into app.json
+npx expo export --platform web
+npx eas-cli@latest deploy --prod              # first deploy, choose the preview subdomain "cramrade"
+```
+
+Then connect GitHub so the workflows run by themselves: in the Expo dashboard open the project, Settings, GitHub, install the GitHub app, pick this repo, and set the base directory to `apps/app` (the project is in a subfolder of the repo).
+
+After that:
+
+- `.eas/workflows/deploy.yml` puts every change merged into `main` live.
+- `.eas/workflows/pr-preview.yml` gives every pull request its own preview address and posts the link on the PR.
+
+Check the workflow files with `npx eas-cli@latest workflow:validate .eas/workflows/deploy.yml` once the project exists, and run one by hand with `npx eas-cli@latest workflow:run .eas/workflows/deploy.yml`.
