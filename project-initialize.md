@@ -1,9 +1,8 @@
 # Cramrade: project setup and folder structure
 
-Part 1 is the commands to set the project up. Part 2 is the folder map.
+Part 1 is the commands to get the project running. Part 2 is the folder map.
 
-- **Dev A** runs "One-time setup" once, to create the project and push it.
-- **Dev B** (and Dev A on a new computer) runs "Join the project" to get it running.
+The project is already created (task A1). To work on it you only need "Install these first" and "Join the project".
 
 Run every command from the repo's top folder unless a step says otherwise.
 
@@ -14,135 +13,52 @@ Run every command from the repo's top folder unless a step says otherwise.
 ### Install these first (both developers)
 
 - **Git**: https://git-scm.com
-- **Node.js** (the LTS version): https://nodejs.org
-- **pnpm**, the package manager:
+- **Node.js** version 22 or newer: https://nodejs.org
 
-```sh
-npm install -g pnpm
-```
+npm comes with Node.js. Nothing else needs installing: Expo, the Supabase tool and the test runner are all downloaded into the project by `npm install`.
 
 Check they work:
 
 ```sh
 git --version
 node --version
-pnpm --version
+npm --version
 ```
-
-### One-time setup (Dev A only)
-
-**1. Get the repo**
-
-```sh
-git clone https://github.com/BennguyenEHK/Cramrade-.git
-cd Cramrade-
-```
-
-**2. Make it a workspace** (one repo holding several packages)
-
-```sh
-pnpm init
-```
-
-Create a file named `pnpm-workspace.yaml` with:
-
-```yaml
-packages:
-  - 'apps/*'
-  - 'packages/*'
-```
-
-**3. Create the Expo app** (this generates the app's folders)
-
-```sh
-pnpm create expo-app apps/app
-```
-
-**4. Add the Supabase client to the app**
-
-```sh
-cd apps/app
-npx expo install @supabase/supabase-js react-native-url-polyfill expo-sqlite
-cd ../..
-```
-
-**5. Create the shared package** (data shapes and schedule engine)
-
-```sh
-mkdir -p packages/shared/src/types packages/shared/src/schedule
-cd packages/shared
-pnpm init
-pnpm add -D typescript vitest
-cd ../..
-```
-
-In `packages/shared/package.json`, set the name to `@cramrade/shared`.
-
-**6. Create the Supabase folder and connect it to the real project**
-
-```sh
-npx supabase init
-npx supabase login
-npx supabase link --project-ref YOUR_PROJECT_REF
-```
-
-`YOUR_PROJECT_REF` is in the Supabase dashboard under Project Settings.
-
-**7. Set up the keys file**
-
-Create `apps/app/.env.example` (this one is committed, with empty values):
-
-```
-EXPO_PUBLIC_SUPABASE_URL=
-EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-```
-
-Copy it to `apps/app/.env` and fill in the real values from the Supabase dashboard. Make sure `.gitignore` in the top folder contains:
-
-```
-node_modules
-.env
-.env.*
-!.env.example
-.expo
-dist
-```
-
-**8. Install everything and check it runs**
-
-```sh
-pnpm install
-cd apps/app
-npx expo start --web
-```
-
-The empty app should open in the browser.
-
-**9. Push it**
-
-```sh
-git checkout -b a1-repo-setup
-git add .
-git commit -m "Set up Expo app, shared package and Supabase folder"
-git push -u origin a1-repo-setup
-```
-
-Then open a pull request on GitHub.
 
 ### Join the project (Dev B, or any new computer)
 
 ```sh
 git clone https://github.com/BennguyenEHK/Cramrade-.git
 cd Cramrade-
-pnpm install
+npm install
 ```
 
 Copy `apps/app/.env.example` to `apps/app/.env`. Ask Dev A for the two values and paste them in. Never send keys through the repo.
 
+Then start the web app:
+
 ```sh
-cd apps/app
-npx expo start --web
+npm run web
 ```
+
+It opens in the browser at `http://localhost:8081`.
+
+If `npm install` or the tests fail with "Cannot find native binding", that is a known npm bug. Fix it with:
+
+```sh
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### If your C: drive is full (optional, Windows)
+
+npm keeps a download cache on C: by default. To keep it inside the project folder instead, create a file named `.npmrc` in the repo's top folder with one line, using your own path:
+
+```
+cache=D:/dev/Startup/.local-deps/npm-cache
+```
+
+Both `.npmrc` and `.local-deps` are ignored by git, so this stays on your computer only and changes nothing for other projects.
 
 ### Everyday commands
 
@@ -154,16 +70,36 @@ git pull
 git checkout -b b3-exam-screen
 ```
 
-**Run the web app** (from `apps/app`):
+**Run the web app:**
 
 ```sh
-npx expo start --web
+npm run web
 ```
 
-**Run the tests of the shared package** (from `packages/shared`):
+**Check the code for type mistakes:**
 
 ```sh
-pnpm vitest run
+npm run typecheck
+```
+
+Run the web app at least once first. The first start creates a small file the check needs.
+
+**Run the tests** (shared package):
+
+```sh
+npm test
+```
+
+**Run one test file:**
+
+```sh
+npx vitest run packages/shared/src/schedule/some-file.test.ts
+```
+
+**Add a package to the app** (from `apps/app`, always with `expo install` so the version matches Expo):
+
+```sh
+npx expo install package-name
 ```
 
 **Finish a task:**
@@ -177,6 +113,15 @@ git push -u origin b3-exam-screen
 Then open a pull request for the other developer to review.
 
 ### Server commands (Dev A)
+
+**Connect to the real Supabase project** (once per computer, opens the browser):
+
+```sh
+npx supabase login
+npx supabase link --project-ref YOUR_PROJECT_REF
+```
+
+`YOUR_PROJECT_REF` is in the Supabase dashboard under Project Settings.
 
 **New database change:**
 
@@ -215,57 +160,88 @@ The web app is hosted on Expo hosting (EAS Hosting). Run these from `apps/app`.
 **Log in to Expo** (once):
 
 ```sh
-npx eas-cli login
+npx eas-cli@latest login
 ```
 
 **Put the web app online by hand:**
 
 ```sh
 npx expo export --platform web
-npx eas-cli deploy
+npx eas-cli@latest deploy
 ```
 
 The command prints a preview address. Add `--prod` to the second command to update the live site.
 
 Deploying by itself when `main` changes is set up in task A3 with Expo workflows.
 
-### Not verified yet
+### How the project was created (for the record)
 
-- The exact folders the Expo generator creates differ between Expo versions (the screens folder may be `app/` or `src/app/`). Keep what it generates.
-- With an Expo version older than SDK 54, add the line `nodeLinker: hoisted` to `pnpm-workspace.yaml`.
+Dev A ran these once. Nobody needs to run them again.
+
+```sh
+npx create-expo-app@latest apps/app --no-install
+npm install
+npm install -D supabase
+npm install -D typescript vitest -w @cramrade/shared
+cd apps/app && npx expo install @supabase/supabase-js react-native-url-polyfill expo-sqlite
+npx supabase init
+```
+
+The top-level `package.json` lists `apps/*` and `packages/*` as npm workspaces, so one `npm install` at the top installs everything.
+
+### What has been checked, and what has not
+
+Checked on Windows on 2026-10-05:
+
+- `npm install` works.
+- The web app starts and answers in the browser (`npm run web`).
+- The web app builds for hosting (`npx expo export --platform web`).
+- `npm run typecheck` and `npm test` pass (there are no tests yet).
+
+Not checked yet:
+
+- The Supabase server commands and the hosting commands. They are from the Supabase and Expo documentation and have not been run on this project.
+- Running the project on Mac or Linux.
 - Supabase server functions run on Deno, a different runtime from the app. Importing `packages/shared` into a server function has not been tested. If it is awkward, the schedule code moves to `supabase/functions/_shared/`.
-- The hosting commands above are from Expo's documentation and have not been run on this project yet.
 - Commands for building the phone app (phase 2) are not listed yet.
 
 ---
 
 ## Part 2: Folder structure
 
+Folders marked "exists" are in the repo now. The others are created by the task that needs them.
+
 ```
 Cramrade/
 ├─ CLAUDE.md, split_work.md, project-initialize.md, README.md
-├─ package.json, pnpm-workspace.yaml, .gitignore
+├─ package.json, package-lock.json, .gitignore, .mcp.json
 │
-├─ apps/app/                  ← the Expo project (generated)
-│  ├─ app/                    ← screens only, kept thin
-│  │  ├─ _layout.tsx
-│  │  ├─ (auth)/              sign-in, sign-up
-│  │  ├─ (main)/              schedule (home), exams, notes, study
-│  │  └─ quiz/                host/[roomId], play/[roomId]
-│  ├─ features/               ← the real code, one folder per feature
-│  │  ├─ exams/  notes/  schedule/  study/  quiz/
-│  │  └─ capture/  reminders/         (phone only, phase 2)
-│  ├─ components/             ← shared buttons, cards, inputs
-│  ├─ lib/                    ← Supabase client, settings
-│  ├─ assets/
-│  └─ .env.example
+├─ apps/app/                  ← the Expo project (exists)
+│  ├─ src/
+│  │  ├─ app/                 ← screens only, kept thin (exists)
+│  │  │  ├─ _layout.tsx
+│  │  │  ├─ (auth)/           sign-in, sign-up
+│  │  │  ├─ (main)/           schedule (home), exams, notes, study
+│  │  │  └─ quiz/             host/[roomId], play/[roomId]
+│  │  ├─ features/            ← the real code, one folder per feature
+│  │  │  ├─ exams/  notes/  schedule/  study/  quiz/
+│  │  │  └─ capture/  reminders/      (phone only, phase 2)
+│  │  ├─ components/          ← shared buttons, cards, inputs (exists)
+│  │  ├─ hooks/  constants/   ← from the Expo template (exist)
+│  │  └─ lib/                 ← Supabase client, settings
+│  ├─ assets/                 (exists)
+│  ├─ AGENTS.md               ← Expo's own rules for AI coding tools (exists)
+│  ├─ app.json                ← Expo settings (exists)
+│  └─ .env.example            (exists)
 │
-├─ packages/shared/           ← no screens, no internet
+├─ packages/shared/           ← no screens, no internet (exists)
 │  └─ src/
+│     ├─ index.ts
 │     ├─ types/               the data shapes (Exam, Note, Question…)
 │     └─ schedule/            the schedule engine and its tests
 │
-├─ supabase/                  ← generated by `supabase init`
+├─ supabase/                  ← made by `supabase init` (exists)
+│  ├─ config.toml
 │  ├─ migrations/             database tables and access rules
 │  └─ functions/              one folder per server function
 │     ├─ read-syllabus/  extract-text/  make-questions/
@@ -275,17 +251,20 @@ Cramrade/
 └─ docs/
 ```
 
+The Expo template comes with two example screens (`src/app/index.tsx` and `src/app/explore.tsx`) and some example components. They are placeholders and get replaced as the real screens are built.
+
 ### How to read it
 
-- **Files in `app/` are screens.** Each file becomes a screen and a web address, like in Next.js. `app/(main)/exams/index.tsx` is the page at `/exams`.
+- **Files in `src/app/` are screens.** Each file becomes a screen and a web address, like in Next.js. `src/app/(main)/exams/index.tsx` is the page at `/exams`.
 - **`_layout.tsx`** wraps all the screens in its folder (shared header, navigation).
 - **`[roomId]`** in a file or folder name is a part of the address that changes, like the room number of a quiz.
 - **Folders in brackets like `(auth)`** group screens without changing the address.
 - **`.web.tsx` and `.native.tsx`**: a file ending in `.web.tsx` is used only on the web, `.native.tsx` only on phones. The quiz host screen is web only. The camera is phone only.
-- **Screens stay thin.** A file in `app/` only puts a screen together. The real code lives in `features/`.
+- **Screens stay thin.** A file in `src/app/` only puts a screen together. The real code lives in `src/features/`.
+- **`@/`** at the start of an import means `apps/app/src/`.
 
 ### Who owns what
 
 - **Dev B:** `apps/app` (screens, features, components).
-- **Dev A:** `packages/shared`, `supabase/`, deployment settings, and `apps/app/features/reminders/` (the alarm code).
+- **Dev A:** `packages/shared`, `supabase/`, deployment settings, and `apps/app/src/features/reminders/` (the alarm code).
 - **Both must agree:** any change to `packages/shared/src/types/`.

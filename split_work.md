@@ -121,7 +121,7 @@ Words used in the labels:
 **A1. Set up the repo** DONE
 - Type: Project setup (folders and settings)
 - Where it runs: The GitHub repo
-- Tools: Git, GitHub (branch protection), Expo, pnpm workspaces
+- Tools: Git, GitHub (branch protection), Expo, npm workspaces
 - What it means: Start the one Expo project that becomes both the web app and the phone app. Create the folders: `apps/app` (the one app for web and phone), `packages/shared` (data shapes and schedule code), `supabase` (database and server code). Protect `main` so changes only arrive by pull request.
 - Done when: Dev B can clone, install, and see the empty app in a browser.
 - Needs first: T1

@@ -1,0 +1,16 @@
+{
+  "name": "cramrade",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "web": "npm run web -w app",
+    "typecheck": "npm exec -w app -- tsc --noEmit && npm run typecheck -w @cramrade/shared",
+    "test": "npm test -w @cramrade/shared"
+  },
+  "devDependencies": {
+    "supabase": "^2.119.0"
+  }
+}

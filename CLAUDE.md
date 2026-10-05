@@ -4,9 +4,45 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-Cramrade is at the planning stage. There is no application code yet, so there are no build, lint or test commands. When task A1 in `split_work.md` creates the project, add the real commands to this file (install, run web, run tests, run a single test, deploy functions). Do not guess them before then.
+The project skeleton exists (task A1): an Expo app, a shared package and a Supabase folder, in one npm workspace. No product features are built yet. The screens in `apps/app/src/app` are the Expo template's placeholders.
 
 `split_work.md` is the source of truth for what is being built, who builds it, and in what order. Read it before starting any task. Every task there has a "Done when" check: work is finished when that check passes, not before.
+
+## Commands
+
+Run from the repo's top folder unless noted. Setup steps and the folder map are in `project-initialize.md`.
+
+```sh
+npm install                 # install everything (npm workspaces: apps/*, packages/*)
+npm run web                 # start the web app (Expo dev server, http://localhost:8081)
+npm run typecheck           # tsc for the app and the shared package
+npm test                    # vitest for packages/shared
+npx vitest run packages/shared/src/path/to/file.test.ts   # one test file
+```
+
+From `apps/app`:
+
+```sh
+npx expo install <package>          # add a dependency to the app. Never plain npm install there
+npx expo export --platform web      # production web build into dist/
+npx eas-cli@latest deploy           # deploy the web build to Expo hosting (add --prod for live)
+```
+
+Supabase (CLI is a dev dependency, so `npx supabase` works after install):
+
+```sh
+npx supabase migration new <name>   # new SQL migration in supabase/migrations
+npx supabase db push                # apply migrations to the linked project
+npx supabase functions new <name>   # new Edge Function
+npx supabase functions deploy <name>
+```
+
+Things that are easy to get wrong:
+
+- `npm run typecheck` fails on a fresh clone until the dev server has run once, because `apps/app/expo-env.d.ts` is generated on first start and is not committed.
+- "Cannot find native binding" from vitest is an npm optional-dependency bug. Fix: delete `node_modules` and `package-lock.json`, then `npm install`.
+- `apps/app/AGENTS.md` holds Expo's own rules for AI tools. Follow it for anything touching Expo, EAS or React Native APIs: check the Expo SDK version in `apps/app/package.json` and read the matching versioned docs instead of relying on memory.
+- The Supabase and EAS commands above come from documentation and had not been run against the real project when this was written.
 
 ## What Cramrade is
 
@@ -14,16 +50,17 @@ A study app for students. It takes exam dates and the student's own notes, build
 
 Two things set it apart, and changes should protect them: review scheduled around real exam dates with reminders, and group quizzes built from the group's own notes. It is not a general "chat with your notes" tool.
 
-## Architecture (decided, not yet built)
+## Architecture
 
 - **One Expo (React Native) codebase** produces the web app, the Android app and the iPhone app. The web app is built first (phase 1), the phone app second (phase 2). The web app is not Next.js. Next.js is only the fallback if task B1 (web trial) fails.
+- **The web app is hosted on Expo hosting (EAS Hosting).**
 - **Supabase is the only backend**: Postgres database, Auth, Realtime (live quiz), Edge Functions (all server code), Storage (temporary photos only). Do not add Neon or a second backend.
 - **Claude API** reads syllabuses, writes questions and lessons, and reads handwriting. It is called only from Edge Functions, never from the app.
 - **TypeScript everywhere.**
 
-Planned layout (the full folder map and the setup commands are in `project-initialize.md`):
+Layout (the full folder map is in `project-initialize.md`). Feature folders are created by the task that needs them:
 
-- `apps/app`: the one Expo app. Screens are shared by web and phone. Phone-only: camera, alarms. Web-only: the quiz host screen.
+- `apps/app`: the one Expo app. Routes live in `src/app` (Expo Router, file-based) and stay thin. Feature code goes in `src/features/<feature>`. Screens are shared by web and phone. Phone-only: camera, alarms. Web-only: the quiz host screen.
 - `packages/shared`: data shapes (Exam, Topic, Note, Chunk, Question, Session, Quiz) and the schedule engine. No screen code and no network code, so it can be tested alone.
 - `supabase/`: migrations (tables and Row Level Security) and Edge Functions.
 
@@ -52,7 +89,7 @@ These are decisions, not suggestions. Do not change them without both developers
 ## Two developers, two areas
 
 - **Dev A (repo owner)** builds everything behind the screen: repo setup, database, hosting and deployment, schedule engine, syllabus reader, question maker, calendar feed, quiz server, phone builds, alarms. Owns `packages/shared`, `supabase/`, and deployment settings.
-- **Dev B** builds everything the student sees and taps: sign-in, exam screen, file upload, syllabus confirm screen, schedule screen, study screen, quiz host and play screens, camera. Owns the screens in `apps/app`.
+- **Dev B** builds everything the student sees and taps: sign-in, exam screen, file upload, syllabus confirm screen, schedule screen, study screen, quiz host and play screens, camera. Owns `apps/app`, except `src/features/reminders` (Dev A's alarm code).
 
 Before changing a file outside your developer's area, stop and say so. Changes to the data shapes in `packages/shared` need both developers to agree, because both sides build against them.
 
