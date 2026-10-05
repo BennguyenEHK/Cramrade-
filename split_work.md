@@ -55,7 +55,7 @@ The web app and the phone app are made from the same code. Both connect to the s
 
 ### Important: read this first
 
-- **Dev A deploys and hosts the web app.** Dev A owns the repo and the server, so one person holds the production keys and controls what goes live (task A3). Dev A also picks the host (Vercel or Expo's own hosting). Dev B has no part in hosting or deployment.
+- **Dev A deploys and hosts the web app.** Dev A owns the repo and the server, so one person holds the production keys and controls what goes live (task A3). The host is Expo's own hosting (EAS Hosting). Dev B has no part in hosting or deployment.
 - **Dev A starts the phone app.** The web app and the phone app are the same Expo project, so it is started only once, in A1. Dev A also makes the first installable phone app (A9). After that, Dev B adds the camera.
 - **The web app is built with Expo (React Native), using its web version. Not Next.js.** One codebase becomes the web app, the Android app and the iPhone app. Next.js is only the fallback if the web trial (B1) fails.
 
@@ -91,8 +91,8 @@ Words used in the labels:
 **T2. Create the accounts** DONE
 - Type: Setup, no code
 - Where it runs: Outside the repo, on each service's website
-- Tools: Supabase dashboard, Expo account, Claude Console (for the API key), a web hosting account, `.env` files
-- What it means: Supabase project (the paid one), Expo, Claude API key, and a place to host the web app. Google Play and Apple accounts wait until phase 2.
+- Tools: Supabase dashboard, Expo account, Claude Console (for the API key), `.env` files
+- What it means: Supabase project (the paid one), Expo (also used for hosting the web app), and a Claude API key. Google Play and Apple accounts wait until phase 2.
 - Done when: Both of you can log in to each one. Keys are in `.env` files that are not in git.
 
 **T3. Write the shared `CLAUDE.md`** DONE
@@ -137,8 +137,8 @@ Words used in the labels:
 **A3. Put the web app online**
 - Type: Deployment setup (settings, no product code)
 - Where it runs: The web host
-- Tools: Vercel or Expo hosting (Dev A picks), GitHub
-- What it means: Pick the web host, then connect the repo to it so that every change merged into `main` goes live by itself. Dev A does this because Dev A owns the repo and holds the production keys. From here on there is always a real web address to test on.
+- Tools: Expo hosting (EAS Hosting), Expo workflows, GitHub
+- What it means: Connect the repo to Expo hosting so that every change merged into `main` goes live by itself. Dev A does this because Dev A owns the repo and holds the production keys. From here on there is always a real web address to test on.
 - Done when: The empty app opens at a public web address, and a merged change shows up there without anyone uploading by hand.
 - Needs first: A1, B1
 
@@ -379,9 +379,9 @@ Timing: phase 1 is about 4 weeks of full-time work. Phase 2 is not estimated yet
 - What it is for: The one codebase that becomes the web app, the Android app and the iPhone app. Its cloud service makes the installable phone app files.
 - Cost: Free plan: 15 Android + 15 iOS builds a month
 
-**Web hosting (Vercel or Expo's own hosting)**
-- What it is for: Puts the web app on the internet. Dev A picks which one in task A3.
-- Cost: Vercel's free plan is for non-commercial use only. Expo hosting limits not checked.
+**Web hosting: Expo hosting (EAS Hosting)**
+- What it is for: Puts the web app on the internet. Made for Expo web apps, uses the same Expo account as the phone builds, and can deploy by itself when `main` changes. Vercel is only the fallback if the web trial (B1) fails and the web app moves to Next.js.
+- Cost: Free plan to start (hosting limits not checked). A custom domain needs a paid Expo plan.
 
 **Supabase: Postgres database**
 - What it is for: Stores all the data.

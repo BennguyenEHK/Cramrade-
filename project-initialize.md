@@ -208,11 +208,33 @@ npx supabase functions deploy make-questions
 npx supabase secrets set ANTHROPIC_API_KEY=your-key-here
 ```
 
+### Web hosting commands (Dev A)
+
+The web app is hosted on Expo hosting (EAS Hosting). Run these from `apps/app`.
+
+**Log in to Expo** (once):
+
+```sh
+npx eas-cli login
+```
+
+**Put the web app online by hand:**
+
+```sh
+npx expo export --platform web
+npx eas-cli deploy
+```
+
+The command prints a preview address. Add `--prod` to the second command to update the live site.
+
+Deploying by itself when `main` changes is set up in task A3 with Expo workflows.
+
 ### Not verified yet
 
 - The exact folders the Expo generator creates differ between Expo versions (the screens folder may be `app/` or `src/app/`). Keep what it generates.
 - With an Expo version older than SDK 54, add the line `nodeLinker: hoisted` to `pnpm-workspace.yaml`.
 - Supabase server functions run on Deno, a different runtime from the app. Importing `packages/shared` into a server function has not been tested. If it is awkward, the schedule code moves to `supabase/functions/_shared/`.
+- The hosting commands above are from Expo's documentation and have not been run on this project yet.
 - Commands for building the phone app (phase 2) are not listed yet.
 
 ---
