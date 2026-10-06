@@ -5,9 +5,17 @@
 # Schema: https://docs.expo.dev/eas/workflows/syntax.md ("deploy" job type)
 name: Deploy web app
 
+# Only changes that can alter the web app start a deploy. Documents, the
+# database folder and anything else in the repo do not.
 on:
   push:
     branches: ['main']
+    paths:
+      - apps/app/**
+      - packages/shared/**
+      - package.json
+      - package-lock.json
+      - '!**/*.md'
 
 jobs:
   deploy:

@@ -3,13 +3,21 @@
 # Schema: https://docs.expo.dev/eas/hosting/workflows.md
 name: PR preview
 
+# Only pull requests that touch the web app get a preview.
 on:
-  pull_request: {}
+  pull_request:
+    paths:
+      - apps/app/**
+      - packages/shared/**
+      - package.json
+      - package-lock.json
+      - '!**/*.md'
 
 jobs:
   deploy:
     name: Deploy PR preview
     type: deploy
+    environment: preview
 
   comment:
     needs: [deploy]
