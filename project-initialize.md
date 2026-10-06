@@ -114,26 +114,22 @@ Then open a pull request for the other developer to review.
 
 ### Server commands (Dev A)
 
+Database changes and server functions go live by themselves when `main` changes. Supabase is connected to the GitHub repo with "Deploy to production" switched on, so nobody runs `db push` by hand.
+
 **Connect to the real Supabase project** (once per computer, opens the browser):
 
 ```sh
 npx supabase login
-npx supabase link --project-ref YOUR_PROJECT_REF
+npx supabase link --project-ref ialkxvoytoqfuxxnzlaa
 ```
-
-`YOUR_PROJECT_REF` is in the Supabase dashboard under Project Settings.
 
 **New database change:**
 
 ```sh
-npx supabase migration new create_tables
+npx supabase migration new add_something
 ```
 
-Write the SQL in the file it creates under `supabase/migrations/`, then send it to the real database:
-
-```sh
-npx supabase db push
-```
+Write the SQL in the file it creates under `supabase/migrations/`, open a pull request, and merge it. The merge applies it to the real database at once, and there is no test copy, so read it carefully first.
 
 **New server function:**
 
@@ -141,17 +137,15 @@ npx supabase db push
 npx supabase functions new make-questions
 ```
 
-**Put a server function online:**
-
-```sh
-npx supabase functions deploy make-questions
-```
+It goes online when the pull request is merged.
 
 **Store a secret for server functions** (for example the Claude API key):
 
 ```sh
 npx supabase secrets set ANTHROPIC_API_KEY=your-key-here
 ```
+
+**Sign-in settings** (site address, allowed redirect addresses, guest sign-in, email confirmation) are changed in the Supabase dashboard under Authentication. The same settings in `supabase/config.toml` only affect a local test stack.
 
 ### Web hosting commands (Dev A)
 
@@ -172,7 +166,7 @@ npx eas-cli@latest deploy
 
 The command prints a preview address. Add `--prod` to the second command to update the live site.
 
-Deploying by itself when `main` changes is set up in task A3 with Expo workflows.
+The web app also deploys by itself when `main` changes, through the workflow in `apps/app/.eas/workflows/deploy.yml`. Each pull request gets a preview address.
 
 ### How the project was created (for the record)
 
@@ -200,7 +194,8 @@ Checked on Windows on 2026-10-05:
 
 Not checked yet:
 
-- The Supabase server commands and the hosting commands. They are from the Supabase and Expo documentation and have not been run on this project.
+- `supabase functions new` and `supabase secrets set` have not been run on this project yet.
+- The first automatic Supabase deploy from `main`.
 - Running the project on Mac or Linux.
 - Supabase server functions run on Deno, a different runtime from the app. Importing `packages/shared` into a server function has not been tested. If it is awkward, the schedule code moves to `supabase/functions/_shared/`.
 - Commands for building the phone app (phase 2) are not listed yet.

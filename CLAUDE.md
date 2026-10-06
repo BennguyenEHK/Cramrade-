@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-The project skeleton exists (task A1): an Expo app, a shared package and a Supabase folder, in one npm workspace. No product features are built yet. The screens in `apps/app/src/app` are the Expo template's placeholders.
+Tasks A1 to A3 are done: an Expo app, a shared package and a Supabase folder in one npm workspace; 16 tables live on Supabase with Row Level Security; the web app is live at https://cramrade.expo.app with the app shell, theme and homepage. `sign-in` and `workspace` in `apps/app/src/app` are placeholders for Dev B. No product features are built yet.
 
 `split_work.md` is the source of truth for what is being built, who builds it, and in what order. Read it before starting any task. Every task there has a "Done when" check: work is finished when that check passes, not before.
 
@@ -32,17 +32,18 @@ Supabase (CLI is a dev dependency, so `npx supabase` works after install):
 
 ```sh
 npx supabase migration new <name>   # new SQL migration in supabase/migrations
-npx supabase db push                # apply migrations to the linked project
 npx supabase functions new <name>   # new Edge Function
-npx supabase functions deploy <name>
 ```
+
+Database changes and Edge Functions go live by themselves: Supabase's GitHub integration ("Deploy to production") applies new migrations and deploys functions when `main` changes. Do not run `supabase db push` or `supabase functions deploy` by hand except to recover from a failed deploy. A merged migration changes the real database at once and there is no staging copy, so read migration pull requests carefully.
 
 Things that are easy to get wrong:
 
 - `npm run typecheck` fails on a fresh clone until the dev server has run once, because `apps/app/expo-env.d.ts` is generated on first start and is not committed.
 - "Cannot find native binding" from vitest is an npm optional-dependency bug. Fix: delete `node_modules` and `package-lock.json`, then `npm install`.
 - `apps/app/AGENTS.md` holds Expo's own rules for AI tools. Follow it for anything touching Expo, EAS or React Native APIs: check the Expo SDK version in `apps/app/package.json` and read the matching versioned docs instead of relying on memory.
-- The Supabase and EAS commands above come from documentation and had not been run against the real project when this was written.
+- Auth, API and seed settings in `supabase/config.toml` are not applied to the live project. Live Auth settings (site URL, redirect URLs, anonymous sign-in) are changed in the Supabase dashboard.
+- Pushing to `main` deploys the web app (Expo workflow `apps/app/.eas/workflows/deploy.yml`) and the backend (Supabase GitHub integration). Task branches deploy nothing live.
 
 ## What Cramrade is
 
