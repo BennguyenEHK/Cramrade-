@@ -445,6 +445,10 @@ allowed_mime_types = [
 enabled = true
 verify_jwt = true
 
+[functions.make-questions]
+enabled = true
+verify_jwt = true
+static_files = ["./functions/_shared/prompts/make-questions.md"]
 [functions.read-syllabus]
 enabled = true
 verify_jwt = true
