@@ -8,9 +8,11 @@
   "scripts": {
     "web": "npm run web -w app",
     "typecheck": "npm exec -w app -- tsc --noEmit && npm run typecheck -w @cramrade/shared",
-    "test": "vitest run"
+    "test": "vitest run",
+    "sync-engine": "node scripts/sync-engine.mjs"
   },
   "devDependencies": {
+    "ical.js": "^2.2.1",
     "supabase": "^2.119.0",
     "vitest": "^5.0.3"
   }
