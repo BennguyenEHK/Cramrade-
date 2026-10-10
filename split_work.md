@@ -244,8 +244,8 @@ Words used in the labels:
 
 **Phase 1: web app**
 
-**B1. Web trial** PARTIALLY
-- Status: During A1 the Expo web version was started in a browser and built for hosting, so the basics work. Still to test: uploading a PDF and a wide full-screen layout.
+**B1. Web trial** DONE
+- Status: Done 2026-10-10. PDF picking and sending, full-width layout and full-screen mode passed in the earlier Edge trial; the user repeated the checks in Chrome and reported "Chrome passed". The written result is preserved in `docs/trials/b1-web-trial.md` on `dev-b`. The throwaway trial page was removed after verification because B4 supplies the real upload screen.
 - Type: Trial (a throwaway test page and a short written result)
 - Where it runs: Web
 - Tools: Expo web, Chrome
@@ -253,8 +253,8 @@ Words used in the labels:
 - Done when: A test page in Chrome uploads a PDF and shows a full-width screen. A short note says "works" or "does not work, because".
 - Needs first: A1
 
-**B2. Sign-in** PARTIALLY
-- Status: Built 2026-10-10, branch `b2-sign-in`. Sign-up, sign-in, sign-out and the account page work in the browser, and the top bar shows "Account" when signed in. Checked in Microsoft Edge against a stand-in for Supabase sign-in, because the live keys were not on the test computer: 16 of 16 checks passed, including closing the whole browser, reopening it and still being signed in. Left: run the same check against the live Supabase project once `apps/app/.env` has the two values. Dev A also needs to make sure those two values are set in the Expo project's environment variables (preview and production), or the hosted app will say sign-in is not connected.
+**B2. Sign-in** DONE
+- Status: Done 2026-10-10 on `dev-b`. Sign-up, sign-in and sign-out are built. The user completed a fresh account sign-up against live Supabase; closing and reopening a browser tab restored the signed-in Workspace. Earlier stand-in checks passed 16 of 16 cases. Details: `apps/app/B2-checks.md`.
 - Type: App screens (sign-up page and log-in page)
 - Where it runs: Web app and phone app
 - Tools: Expo, Supabase Auth (email sign-in)
@@ -271,8 +271,8 @@ Words used in the labels:
 - Done when: An exam can be added, edited, deleted, and is still there after reloading.
 - Needs first: A2, B2
 
-**B4. File upload** PARTIALLY
-- Status: Built 2026-10-10 on `b4-file-upload`, stacked on `b3-exam-screen`. Notes screen, picker, extracted-text reader, authenticated `extract-text` Edge Function and atomic note-save migration are ready for review. Eight extraction/HTTP tests and isolated PostgreSQL checks pass. The live function returns NOT_FOUND, so Dev A must review and deploy the backend before the live PDF/Word save-and-reload check can pass. Details and limits: `apps/app/B4-checks.md`.
+**B4. File upload** DONE
+- Status: Done 2026-10-10 on `dev-b`. Live PDF and Word uploads saved readable text that survived reload, including a repeat against Dev A's updated extraction backend. An image-only PDF showed its saved failure reason instead of success. The app handles ready/processing/failed responses and structured errors, and supports optional exam and syllabus fields. The user approved keeping the synthetic test notes. Details and limits: `apps/app/B4-checks.md`.
 - Type: Part of a page (upload button) plus a server function
 - Where it runs: Web app and phone app, with the text work on the server
 - Tools: Expo document picker, Supabase Edge Function, Supabase database
