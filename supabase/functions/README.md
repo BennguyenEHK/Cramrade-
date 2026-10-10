@@ -100,4 +100,4 @@ Run from the repo root:
 node --env-file=supabase/functions/_handtests/.env supabase/functions/_handtests/read-syllabus.mjs
 ```
 
-It prints both answers and ends with `read-syllabus hand test passed`. It deletes the notes it made. The AI's titles and topic wording can vary between runs; the dates, the number of proposals and the copied sentences cannot.
+It prints both answers and ends with `read-syllabus hand test passed`. It deletes the notes it made. The AI's titles and topic wording can vary between runs; the dates, the number of proposals and the copied sentences should not.

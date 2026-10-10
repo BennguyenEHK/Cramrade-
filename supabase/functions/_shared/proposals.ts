@@ -131,6 +131,8 @@ function checkProposal(item: unknown, sourceText: string): SyllabusProposal | nu
   if (typeof evidence !== 'string') return null;
   const cleanEvidence = evidence.trim();
   if (cleanEvidence.length === 0 || !quoteAppears(cleanEvidence, sourceText)) return null;
+  // date_not_in_evidence: the sentence must mention the date it is said to prove.
+  if (!evidenceMentionsDate(cleanEvidence, date)) return null;
 
   return {
     title: cleanTitle,
@@ -159,4 +161,12 @@ function cleanTopics(topics: unknown[]): string[] {
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** True when the text holds the ISO date, or the day number as a whole number (12 in "November 12" or "12/11"). */
+export function evidenceMentionsDate(evidence: string, date: string): boolean {
+  if (evidence.includes(date)) return true;
+  const day = String(Number(date.slice(8, 10)));
+  const token = new RegExp('(?<!\\d)0?' + day + '(?!\\d)');
+  return token.test(evidence);
 }

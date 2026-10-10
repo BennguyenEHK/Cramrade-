@@ -163,3 +163,20 @@ describe('validateProposals', () => {
     }
   });
 });
+
+describe('date must appear in the evidence', () => {
+  const text = ['Midterm on November 12 at 9am.', 'Quiz 1 is in Week 7.', 'Exam on 12/11/2026 in Hall B.'].join(' ');
+  const run = (p: Record<string, unknown>) => validateProposals({ proposals: [proposal(p)] }, text, TODAY).proposals;
+
+  it('passes when the evidence has the day number', () => {
+    expect(run({ evidence: 'Midterm on November 12 at 9am' })).toHaveLength(1);
+  });
+
+  it('drops evidence that does not mention the date', () => {
+    expect(run({ title: 'Quiz 1', date: '2026-10-20', evidence: 'Quiz 1 is in Week 7' })).toHaveLength(0);
+  });
+
+  it('passes a numeric date such as 12/11/2026', () => {
+    expect(run({ evidence: 'Exam on 12/11/2026 in Hall B' })).toHaveLength(1);
+  });
+});
