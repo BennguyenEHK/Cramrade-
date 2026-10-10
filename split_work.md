@@ -285,7 +285,8 @@ Words used in the labels:
 - Done when: Uploading a PDF and a Word file results in readable text saved as Notes, and a scanned PDF shows its failure reason.
 - Needs first: B2, A4a
 
-**B5. Syllabus confirm screen**
+**B5. Syllabus confirm screen** PARTIALLY
+- Status: Built on `dev-b` 2026-10-10. Live synthetic syllabus returned editable dates and topics; a corrected exam and its topics saved, and the exam appeared in Workspace. A second uploaded syllabus with no dates gave the manual-entry link. Left: repeat with a real student's syllabus. Checks: `apps/app/PHASE1-checks.md`.
 - Type: App screen (a page)
 - Where it runs: Web app and phone app
 - Tools: Expo, Supabase database
@@ -293,7 +294,8 @@ Words used in the labels:
 - Done when: A real syllabus leads to a list the student can fix and confirm, and the confirmed exams appear on the exam screen.
 - Needs first: B3, B4, A4 (use a fake list until it is ready)
 
-**B6. Schedule screen**
+**B6. Schedule screen** DONE
+- Status: Done on `dev-b` 2026-10-10. Reads saved sessions, shows due and upcoming sessions with their exams, final passes and completion history; skip/rebuild and refresh supported. Live check: changing the test exam from October 25 to October 26 moved its final pass from October 24 to October 25. Checks: `apps/app/PHASE1-checks.md`.
 - Type: App screen (a page)
 - Where it runs: Web app and phone app
 - Tools: Expo, Supabase database
@@ -301,7 +303,8 @@ Words used in the labels:
 - Done when: The plan from A5 shows correctly and updates when an exam date changes.
 - Needs first: A5 (use a fake plan until it is ready)
 
-**B7. Study screen**
+**B7. Study screen** DONE
+- Status: Done on `dev-b` 2026-10-10. Scheduled study, quick review and flashcards use verified live questions and show the source chunk and quote. Answers save with retry-safe ids. Live scheduled session resumed after reload with the saved question removed, then finished and appeared as done on Schedule; on-demand quiz and flashcards also saved results. Checks: `apps/app/PHASE1-checks.md`.
 - Type: App screen (a page)
 - Where it runs: Web app and phone app
 - Tools: Expo, Supabase database
@@ -309,7 +312,8 @@ Words used in the labels:
 - Done when: A scheduled session and an on-demand review can both be played with real questions, and results are saved.
 - Needs first: A6 (use fake questions until it is ready)
 
-**B8. Host and play screens**
+**B8. Host and play screens** PARTIALLY
+- Status: Built on `dev-b` 2026-10-10. Web host, guest join, Realtime with reconnect polling, server-clock countdown, results, scoreboard and solo play are connected to A8. Live solo quiz advanced through two questions, retained its 738-point server score after reload, and finished automatically. Group lobby and join-link controls work. Guest testing is blocked by live Supabase Auth settings (`external.anonymous_users: false`); Dev A must enable anonymous sign-ins, then a separate guest browser must join, answer, reload and finish. Join errors appear beside the button and pending joins show “Joining…”. Checks: `apps/app/PHASE1-checks.md`.
 - Type: Two app screens (host page and play page)
 - Where it runs: Host page: web only. Play page: web app and phone app
 - Tools: Expo, Supabase Realtime, Supabase Auth (guest sign-in)
@@ -317,7 +321,8 @@ Words used in the labels:
 - Done when: A person with only a browser joins and finishes a quiz. A player who drops out can rejoin and keep their score. A solo quiz starts with one button and plays to the end.
 - Needs first: A8
 
-**B13. Study settings screen**
+**B13. Study settings screen** DONE
+- Status: Done on `dev-b` 2026-10-10. Pace, weekdays off, usual session time, time zone and busy date ranges save to the agreed tables and rebuild the plan. Live light pace and an October 15 busy day survived reload; the rebuilt plan had no session on that day. Original normal pace restored. Checks: `apps/app/PHASE1-checks.md`.
 - Type: App screen (a small page)
 - Where it runs: Web app and phone app
 - Tools: Expo, Supabase database
@@ -325,7 +330,8 @@ Words used in the labels:
 - Done when: Changing the pace or marking a busy day is saved, is still there after a reload, and the schedule screen shows no sessions on the busy days once the plan is rebuilt.
 - Needs first: A4a (the settings tables), A5 (use the default settings until it is ready)
 
-**B14. Calendar button**
+**B14. Calendar button** PARTIALLY
+- Status: Built on `dev-b` 2026-10-10. Schedule has create/copy/replace calendar-link controls and instructions for Google and Apple Calendar. A live link was created and copying was checked without recording its private token. Left: verify link replacement and subscribe in Google Calendar to see the saved exams and sessions. Checks: `apps/app/PHASE1-checks.md`.
 - Type: Part of a page (a button and a short instructions panel)
 - Where it runs: Web app and phone app
 - Tools: Expo, Supabase database
@@ -334,6 +340,7 @@ Words used in the labels:
 - Needs first: A7
 
 **B9. Handwriting trial**
+- Status: Waiting for real input. Dev B confirmed 2026-10-10 that the 20 note photos and phone checks are not available yet. Trial procedure and result fields are prepared in `apps/app/B9-handwriting-trial.md`; no accuracy, timing or reader choice is claimed.
 - Type: Trial (a written result, no product code)
 - Where it runs: A phone and a computer
 - Tools: Phone camera, the phone's built-in text reader (Google ML Kit, Apple Vision), Gemini API (vision)

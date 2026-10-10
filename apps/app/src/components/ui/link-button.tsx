@@ -62,6 +62,7 @@ export function LinkButton({ href, children, variant = 'primary', size = 'regula
 const styles = StyleSheet.create({
   base: {
     alignSelf: 'flex-start',
+    maxWidth: '100%',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.control,

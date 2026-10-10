@@ -15,6 +15,7 @@ import { listNotes, readChunks } from '@/lib/note-data';
 import { listExams } from '@/lib/exam-data';
 import { releaseFile } from './picked-file';
 import { MAX_UPLOAD_BYTES, uploadNotes } from './upload';
+import { WorkspaceLinks } from '@/components/frame/workspace-page';
 
 type Selection = { asset: DocumentPicker.DocumentPickerAsset; id: string };
 type Preview = { id: string; chunks: Chunk[]; loading: boolean; error: string };
@@ -198,9 +199,7 @@ export function NotesScreen({ ownerId }: { ownerId: string }) {
             Bring the notes you already study from. Only their text is saved to your account.
           </AppText>
         </View>
-        <LinkButton href="/workspace" variant="quiet">
-          Your exams
-        </LinkButton>
+        <WorkspaceLinks />
         <View
           style={[styles.upload, { backgroundColor: colors.surface, borderColor: colors.line }]}
         >
@@ -325,6 +324,7 @@ export function NotesScreen({ ownerId }: { ownerId: string }) {
               >
                 Read extracted text
               </Button>
+              {note.isSyllabus && note.status === 'ready' && <LinkButton href="/syllabus" variant="quiet">Find and confirm syllabus dates</LinkButton>}
               {preview?.id === note.id && (
                 <View style={styles.heading}>
                   {preview.loading ? (

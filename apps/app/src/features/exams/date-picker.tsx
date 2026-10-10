@@ -7,14 +7,14 @@ import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { dateOnly, formatDate, parseDate } from './dates';
 
-export function DatePicker({ value, onChange, disabled }: { value: string; onChange: (value: string) => void; disabled: boolean }) {
+export function DatePicker({ value, onChange, disabled, label = 'Exam date' }: { value: string; onChange: (value: string) => void; disabled: boolean; label?: string }) {
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => parseDate(value) ?? new Date());
   const first = new Date(month.getFullYear(), month.getMonth(), 1, 12);
   const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   return <View style={styles.field}>
-    <TextField label="Exam date" hint="YYYY-MM-DD, or choose a day below." value={value} onChangeText={onChange} editable={!disabled} maxLength={10} autoCapitalize="none" />
+    <TextField label={label} hint="YYYY-MM-DD, or choose a day below." value={value} onChangeText={onChange} editable={!disabled} maxLength={10} autoCapitalize="none" />
     <Button variant="quiet" disabled={disabled} onPress={() => { setMonth(parseDate(value) ?? new Date()); setOpen(!open); }}>{open ? 'Close calendar' : 'Choose a date'}</Button>
     {open && <View style={[styles.calendar, { backgroundColor: colors.surface, borderColor: colors.line }]}>
       <AppText bold>{month.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</AppText>
