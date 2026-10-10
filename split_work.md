@@ -235,8 +235,8 @@ Words used in the labels:
 
 **Phase 1: web app**
 
-**B1. Web trial** PARTIALLY
-- Status: During A1 the Expo web version was started in a browser and built for hosting, so the basics work. Still to test: uploading a PDF and a wide full-screen layout.
+**B1. Web trial** DONE
+- Status: Done 2026-10-10, branch `b1-web-trial`. Works: a test page at `/trial` picked a PDF, read it, and sent it whole to a test receiver (also a 20 MB file, in about one second), and a quiz host mock-up filled the full window width at 1920, 1280 and 390 pixels, with a working full-screen button. Tested in Microsoft Edge, which uses the same engine as Chrome. We stay on Expo. Result: `docs/trials/b1-web-trial.md`. The test page is throwaway and goes when B4 lands.
 - Type: Trial (a throwaway test page and a short written result)
 - Where it runs: Web
 - Tools: Expo web, Chrome
