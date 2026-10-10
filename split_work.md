@@ -244,7 +244,8 @@ Words used in the labels:
 - Done when: A test page in Chrome uploads a PDF and shows a full-width screen. A short note says "works" or "does not work, because".
 - Needs first: A1
 
-**B2. Sign-in**
+**B2. Sign-in** PARTIALLY
+- Status: Built 2026-10-10, branch `b2-sign-in`. Sign-up, sign-in, sign-out and the account page work in the browser, and the top bar shows "Account" when signed in. Checked in Microsoft Edge against a stand-in for Supabase sign-in, because the live keys were not on the test computer: 16 of 16 checks passed, including closing the whole browser, reopening it and still being signed in. Left: run the same check against the live Supabase project once `apps/app/.env` has the two values. Dev A also needs to make sure those two values are set in the Expo project's environment variables (preview and production), or the hosted app will say sign-in is not connected.
 - Type: App screens (sign-up page and log-in page)
 - Where it runs: Web app and phone app
 - Tools: Expo, Supabase Auth (email sign-in)
