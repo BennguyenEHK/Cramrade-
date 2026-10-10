@@ -445,6 +445,21 @@ allowed_mime_types = [
 enabled = true
 verify_jwt = true
 
+[functions.quiz-create]
+enabled = true
+verify_jwt = true
+
+[functions.quiz-start]
+enabled = true
+verify_jwt = true
+
+[functions.quiz-answer]
+enabled = true
+verify_jwt = true
+
+[functions.quiz-advance]
+enabled = true
+verify_jwt = true
 [functions.calendar-feed]
 # Calendar apps cannot send a login. The token in the link is the key.
 verify_jwt = false
