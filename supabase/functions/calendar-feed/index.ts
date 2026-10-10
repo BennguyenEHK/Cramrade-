@@ -35,13 +35,19 @@ Deno.serve(async (req) => {
   if (!feed) return empty(404);
 
   const now = new Date();
+  // Exams keep a one-day grace: exam_date is a plain date in the student's own
+  // day, but this function only knows UTC. Without the grace, a student west of
+  // UTC would lose exam day's entry from the feed once UTC rolled past midnight.
+  // Calendar apps hide past all-day events on their own, so the extra day is
+  // never shown as upcoming.
+  const examFrom = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
   const [examsResult, sessionsResult] = await Promise.all([
     db
       .from('exams')
       .select('id, title, exam_date')
       .eq('owner_id', feed.user_id)
-      .gte('exam_date', now.toISOString().slice(0, 10))
+      .gte('exam_date', examFrom)
       .order('exam_date'),
     db
       .from('study_sessions')
