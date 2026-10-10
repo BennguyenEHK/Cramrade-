@@ -19,6 +19,8 @@ export interface StudySession {
   /** When the session is due. */
   scheduledFor: Timestamp;
   status: StudySessionStatus;
+  /** True for the last session before the exam, which touches every topic once. */
+  isFinalPass: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

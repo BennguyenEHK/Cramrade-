@@ -9,6 +9,9 @@ type NoteRow = {
   source: NoteSource;
   original_filename: string | null;
   status: NoteStatus;
+  exam_id: string | null;
+  is_syllabus: boolean;
+  failure_reason: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -29,6 +32,9 @@ export function mapNote(row: NoteRow): Note {
     source: row.source,
     originalFilename: row.original_filename,
     status: row.status,
+    examId: row.exam_id,
+    isSyllabus: row.is_syllabus,
+    failureReason: row.failure_reason,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

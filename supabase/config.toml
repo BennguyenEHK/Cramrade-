@@ -423,7 +423,24 @@ enabled = true
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
 
-# The handler verifies the bearer token with Auth before reading any file.
-# This supports projects using asymmetric JWT signing keys too.
+# --- Added in A4a -----------------------------------------------------------
+# The uploads bucket. The GitHub integration may create it on the live project
+# from this block, and the server_side migration also inserts it with
+# "on conflict do update", so both paths give the same bucket.
+[storage.buckets.uploads]
+public = false
+file_size_limit = "20MiB"
+allowed_mime_types = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "text/plain",
+  "text/markdown",
+  "text/x-markdown",
+]
+
+# One block per Edge Function. verify_jwt = true: the platform refuses calls
+# without a valid token before our code runs. A function that uses AI prompt
+# files also needs: static_files = ["./functions/_shared/prompts/*.md"]
 [functions.extract-text]
-verify_jwt = false
+enabled = true
+verify_jwt = true

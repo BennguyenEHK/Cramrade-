@@ -10,4 +10,5 @@ web-build
 # machine-local settings and download cache (see project-initialize.md)
 .npmrc
 .local-deps
+deno.lock
 .claude/worktrees

@@ -4,6 +4,10 @@ import type { Id, Timestamp } from './common';
 export const QUIZ_ROOM_STATUSES = ['lobby', 'running', 'finished'] as const;
 export type QuizRoomStatus = (typeof QUIZ_ROOM_STATUSES)[number];
 
+/** group: a live room with a lobby and a join code. solo: one player, starts at once. */
+export const QUIZ_MODES = ['group', 'solo'] as const;
+export type QuizMode = (typeof QUIZ_MODES)[number];
+
 /**
  * One live group quiz. The host opens it on the web, players join with the
  * code from a browser or the phone app.
@@ -26,6 +30,10 @@ export interface QuizRoom {
   status: QuizRoomStatus;
   /** How long players get for each question. */
   secondsPerQuestion: number;
+  /** Group or solo. Set by the server when the room is made. */
+  mode: QuizMode;
+  /** How long the right answer and scores show before the next question. Default 5. */
+  resultsSeconds: number;
   /** Which question is showing: a position in quiz_room_questions. -1 before the quiz starts. */
   currentQuestionIndex: number;
   /** When the current question was sent out, set by the server. Null before the first question. */
@@ -82,5 +90,7 @@ export interface QuizAnswer {
   answer: string;
   /** Null until the server has scored it. */
   isCorrect: boolean | null;
+  /** Points for this answer: 0 when wrong, 500 to 1000 when right, faster is more. Set by the server. */
+  points: number;
   answeredAt: Timestamp;
 }

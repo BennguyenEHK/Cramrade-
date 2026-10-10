@@ -10,11 +10,13 @@ export type { StudySession, StudySessionStatus, SessionQuestion, Attempt } from 
 export type {
   QuizRoom,
   QuizRoomStatus,
+  QuizMode,
   QuizRoomQuestion,
   QuizPlayer,
   QuizAnswer,
 } from './quiz';
 export type { CalendarFeed } from './calendar';
+export type { StudySettings, BusyDay } from './settings';
 export type {
   Pace,
   ScheduleWarning,
@@ -34,6 +36,6 @@ export { EXAM_KINDS, EXAM_SOURCES } from './exam';
 export { GROUP_ROLES } from './group';
 export { NOTE_SOURCES, NOTE_STATUSES } from './note';
 export { QUESTION_KINDS } from './question';
-export { QUIZ_ROOM_STATUSES } from './quiz';
+export { QUIZ_ROOM_STATUSES, QUIZ_MODES } from './quiz';
 export { STUDY_SESSION_STATUSES } from './session';
 export { PACES, SESSIONS_PER_DAY, SCHEDULE_WARNING_CODES } from './schedule';

@@ -16,7 +16,7 @@ Run from the repo's top folder unless noted. Setup steps and the folder map are 
 npm install                 # install everything (npm workspaces: apps/*, packages/*)
 npm run web                 # start the web app (Expo dev server, http://localhost:8081)
 npm run typecheck           # tsc for the app and the shared package
-npm test                    # vitest for packages/shared
+npm test                    # vitest for packages/shared and supabase/functions/_shared
 npx vitest run packages/shared/src/path/to/file.test.ts   # one test file
 ```
 
@@ -32,7 +32,9 @@ Supabase (CLI is a dev dependency, so `npx supabase` works after install):
 
 ```sh
 npx supabase migration new <name>   # new SQL migration in supabase/migrations
-npx supabase functions new <name>   # new Edge Function
+# new Edge Function: make supabase/functions/<name>/index.ts by hand and add a
+# [functions.<name>] block (verify_jwt = true) to supabase/config.toml.
+# Not `supabase functions new`: it writes verify_jwt = false into config.toml.
 ```
 
 Database changes and Edge Functions go live by themselves: Supabase's GitHub integration ("Deploy to production") applies new migrations and deploys functions when `main` changes. Do not run `supabase db push` or `supabase functions deploy` by hand except to recover from a failed deploy. A merged migration changes the real database at once and there is no staging copy, so read migration pull requests carefully.
@@ -41,6 +43,7 @@ Things that are easy to get wrong:
 
 - `npm run typecheck` fails on a fresh clone until the dev server has run once, because `apps/app/expo-env.d.ts` is generated on first start and is not committed.
 - "Cannot find native binding" from vitest is an npm optional-dependency bug. Fix: delete `node_modules` and `package-lock.json`, then `npm install`.
+- Server code that needs Deno or an `npm:` package cannot be unit tested; it is tested by hand against the live project after merge (`supabase/functions/README.md`). Do not install Deno for it. If Deno is already installed, `DENO_DIR=.local-deps/deno deno check --node-modules-dir=none <file>` type-checks a function with its cache kept on D:. The flag is needed because the repo has a root `node_modules`, which otherwise makes Deno look for `npm:` packages there.
 - `apps/app/AGENTS.md` holds Expo's own rules for AI tools. Follow it for anything touching Expo, EAS or React Native APIs: check the Expo SDK version in `apps/app/package.json` and read the matching versioned docs instead of relying on memory.
 - Auth, API and seed settings in `supabase/config.toml` are not applied to the live project. Live Auth settings (site URL, redirect URLs, anonymous sign-in) are changed in the Supabase dashboard.
 - Pushing to `main` deploys the web app (Expo workflow `apps/app/.eas/workflows/deploy.yml`) and the backend (Supabase GitHub integration). Task branches deploy nothing live.
@@ -55,23 +58,23 @@ Two things set it apart, and changes should protect them: review scheduled aroun
 
 - **One Expo (React Native) codebase** produces the web app, the Android app and the iPhone app. The web app is built first (phase 1), the phone app second (phase 2). The web app is not Next.js. Next.js is only the fallback if task B1 (web trial) fails.
 - **The web app is hosted on Expo hosting (EAS Hosting).**
-- **Supabase is the only backend**: Postgres database, Auth, Realtime (live quiz), Edge Functions (all server code), Storage (temporary photos only). Do not add Neon or a second backend.
-- **Claude API** reads syllabuses, writes questions and lessons, and reads handwriting. It is called only from Edge Functions, never from the app.
+- **Supabase is the only backend**: Postgres database, Auth, Realtime (live quiz), Edge Functions (all server code), Storage (temporary uploads and photos only). Do not add Neon or a second backend.
+- **Gemini API** reads syllabuses, writes questions and lessons, rates topic difficulty, and reads handwriting. It is called only from Edge Functions, never from the app, through `askGemini` in `supabase/functions/_shared/ai.ts`. Prompts are Markdown files in `supabase/functions/_shared/prompts/`. The model name is the secret `GEMINI_MODEL`.
 - **TypeScript everywhere.**
 
 Layout (the full folder map is in `project-initialize.md`). Feature folders are created by the task that needs them:
 
 - `apps/app`: the one Expo app. Routes live in `src/app` (Expo Router, file-based) and stay thin. Feature code goes in `src/features/<feature>`. Screens are shared by web and phone. Phone-only: camera, alarms. Web-only: the quiz host screen.
 - `packages/shared`: data shapes (Exam, Topic, Note, Chunk, Question, Session, Quiz) and the schedule engine. No screen code and no network code, so it can be tested alone.
-- `supabase/`: migrations (tables and Row Level Security) and Edge Functions.
+- `supabase/`: migrations (tables and Row Level Security) and Edge Functions. Pure server code in `supabase/functions/_shared` uses no Deno-only API and no `npm:` import, so vitest tests it; anything needing a Deno or npm library sits in one adapter file next to the function that uses it.
 
-How data moves: exam dates come in by hand or from a syllabus. Notes come in as files or photos and are turned into text. Text is cut into numbered chunks. An Edge Function asks Claude for questions, each tied to a chunk. The schedule engine places sessions of 5 to 7 questions between today and each exam and saves the plan on the server. Both apps read the same plan. The phone sets local notifications from it, and a calendar feed sends it out.
+How data moves: exam dates come in by hand or from a syllabus. Notes come in as files or photos and are turned into text (files by the `extract-text` function). Text is cut into numbered chunks. An Edge Function asks Gemini for questions, each tied to a chunk. The schedule engine places sessions of 5 to 7 questions between today and each exam and saves the plan on the server. Both apps read the same plan. The phone sets local notifications from it, and a calendar feed sends it out.
 
 ## Product rules
 
 These are decisions, not suggestions. Do not change them without both developers agreeing.
 
-- **The schedule is plain code, never AI.** The schedule engine is a deterministic function with unit tests. The AI only writes content.
+- **The schedule is plain code, never AI.** The schedule engine is a deterministic function with unit tests. The AI only writes content, and rates topic difficulty as a starting guess that the student's answers replace.
 - **Every question must trace to the student's notes.** Each question names its chunk and quotes it, and code verifies the quote exists in that chunk. Questions that fail are dropped, never repaired or padded.
 - **The AI never adds content to notes.** Unclear text is flagged for the student to fix.
 - **A date found in a syllabus is never saved until the student confirms it.** No dates found means saying so, not guessing.
@@ -89,8 +92,8 @@ These are decisions, not suggestions. Do not change them without both developers
 
 ## Two developers, two areas
 
-- **Dev A (repo owner)** builds everything behind the screen: repo setup, database, hosting and deployment, schedule engine, syllabus reader, question maker, calendar feed, quiz server, phone builds, alarms. Owns `packages/shared`, `supabase/`, and deployment settings.
-- **Dev B** builds everything the student sees and taps: sign-in, exam screen, file upload, syllabus confirm screen, schedule screen, study screen, quiz host and play screens, camera. Owns `apps/app`, except `src/features/reminders` (Dev A's alarm code).
+- **Dev A (repo owner)** builds everything behind the screen: repo setup, database, hosting and deployment, text extractor, schedule engine, syllabus reader, question maker, calendar feed, quiz server, phone builds, alarms. Owns `packages/shared`, `supabase/`, and deployment settings.
+- **Dev B** builds everything the student sees and taps: sign-in, exam screen, file upload button, syllabus confirm screen, schedule screen, study settings screen, study screen, quiz host and play screens, calendar button, camera. Owns `apps/app`, except `src/features/reminders` (Dev A's alarm code).
 
 Before changing a file outside your developer's area, stop and say so. Changes to the data shapes in `packages/shared` need both developers to agree, because both sides build against them.
 

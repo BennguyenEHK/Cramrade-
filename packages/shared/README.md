@@ -20,13 +20,15 @@ Seen by: members. Edited or deleted by: the owner. Members can leave; the owner 
 
 ## Exam and Topic
 
-Exam: `title`, `examDate`, `kind` (exam, quiz, competition), `source` (manual, syllabus), optional `groupId` to share it. Syllabus proposals stay on the confirm screen until confirmed, so every row here is one the student agreed to. Topic: `title` and `position` inside an exam.
+Exam: `title`, `examDate`, `kind` (exam, quiz, competition), `source` (manual, syllabus), optional `groupId` to share it. Syllabus proposals stay on the confirm screen until confirmed, so every row here is one the student agreed to. Topic: `title` and `position` inside an exam, and `difficulty` (1 to 5, or null): the AI's first guess at how hard the topic is, set by the server and used by the schedule only until the student has answered questions on it.
 
 Seen by: the owner, and group members when `groupId` is set. Edited by: the owner.
 
 ## Note and Chunk
 
-Note: `title`, `source` (file, photo, text), `originalFilename`, `status` (processing, ready, failed), optional `groupId`. Only text is ever stored, in Chunks: numbered pieces with `position` and `text`.
+Note: `title`, `source` (file, photo, text), `originalFilename`, `status` (processing, ready, failed), optional `groupId`, optional `examId` (the exam the notes are for), `isSyllabus` (the file is a syllabus, so the server reads dates from it instead of making questions) and `failureReason` (one line to show when text extraction failed). Only text is ever stored, in Chunks: numbered pieces with `position` (from 0) and `text`.
+
+Uploading a file: the app creates the note (`source` file, `status` processing), uploads the file to the private Storage bucket `uploads` at `<user id>/<note id>/<file name>` with an explicit content type, and calls the server function `extract-text` with `{ noteId }`. The server saves the chunks, deletes the file and sets `status` to ready, or to failed with `failureReason`.
 
 Seen by: the owner, and group members when shared. The owner creates notes, adds chunks (typed notes) and fixes chunk text (unclear words from a photo). The server adds chunks for uploads.
 
@@ -38,13 +40,13 @@ Seen by: whoever can see the note. The app cannot insert or edit questions; the 
 
 ## StudySession, SessionQuestion, Attempt
 
-StudySession: one short session for one exam, `scheduledFor`, `status` (planned, done, skipped). SessionQuestion lists its questions in order. Attempt: one answer while studying alone, `answer`, `isCorrect`, `answeredAt`; `sessionId` is null for an on-demand review.
+StudySession: one short session for one exam, `scheduledFor`, `status` (planned, done, skipped), `isFinalPass` (the last session before the exam, touching every topic once). SessionQuestion lists its questions in order. Attempt: one answer while studying alone, `answer`, `isCorrect`, `answeredAt`; `sessionId` is null for an on-demand review.
 
 Seen and edited by: the owner only. The schedule engine writes sessions; the app marks them done or skipped and saves attempts.
 
 ## QuizRoom, QuizRoomQuestion, QuizPlayer, QuizAnswer
 
-QuizRoom: `title`, `code`, `status` (lobby, running, finished), `secondsPerQuestion`, `currentQuestionIndex`, `questionStartedAt`, optional `groupId`. QuizRoomQuestion is the ordered question list, visible to the host only, so players cannot read ahead. QuizPlayer: `nickname`, `score`, `userId`. QuizAnswer: one answer per player per question.
+QuizRoom: `title`, `code`, `status` (lobby, running, finished), `mode` (group or solo, from `QUIZ_MODES`), `secondsPerQuestion`, `resultsSeconds` (how long the answer shows before the next question), `currentQuestionIndex`, `questionStartedAt`, optional `groupId`. QuizRoomQuestion is the ordered question list, visible to the host only, so players cannot read ahead. Players read the current question with the database function `current_quiz_question(room_id)`, which adds the answer only once answering time is over. QuizPlayer: `nickname`, `score`, `userId`. QuizAnswer: one answer per player per question, with `points` set by the server.
 
 - The host creates and deletes the room and may change `title`, `status` and `secondsPerQuestion`. Only the server sets `currentQuestionIndex` and `questionStartedAt`.
 - Players join with `join_quiz_room(code, nickname)`. Calling it again with the same login returns the same player, score kept, which is how rejoining works.
@@ -55,6 +57,12 @@ Seen by: the host and the players in the room. A player sees only their own answ
 ## CalendarFeed
 
 `userId` and a random `token` made by the database; the calendar link carries the token. Delete and recreate the row for a new link. Seen by the student only.
+
+## StudySettings and BusyDay
+
+StudySettings: one row per student with `pace` (light, normal, heavy: at most 1, 2 or 3 sessions a day, from `PACES`), `daysOff` (weekdays, 0 = Sunday to 6 = Saturday), `sessionTime` ("18:00:00") and `timeZone` ("UTC" or a name like "Europe/Berlin"). The app creates the row the first time settings are saved; until then the server uses those defaults. BusyDay: `fromDate` to `toDate` (inclusive) when the student cannot study, with an optional `reason`. The schedule places nothing on those days.
+
+Seen and edited by: the student only. Guests cannot create either.
 
 ## Decided (T1 closed on 2026-10-10)
 
@@ -67,6 +75,9 @@ Both developers agreed:
 
 From here on, any change to `src/types/` needs a yes from both developers and a matching database migration.
 
+## Changed in A4a (2026-10-10, needs Dev B's yes)
+
+New fields: `Note.examId`, `Note.isSyllabus`, `Note.failureReason`, `Topic.difficulty`, `StudySession.isFinalPass`, `QuizRoom.mode`, `QuizRoom.resultsSeconds`, `QuizAnswer.points`. New shapes: `StudySettings`, `BusyDay` (its `pace` uses `Pace` and `PACES` from the schedule engine, `types/schedule.ts`). New value list: `QUIZ_MODES`. The matching database migration is `supabase/migrations/*_server_side.sql`.
 ## Schedule engine
 
 `buildSchedule(input)` in `src/schedule/` turns exams, notes, answers and the student's free days into a list of short study sessions. It is plain code, not AI: the same input always gives the same plan. The server function `build-schedule` collects the input from the database, calls it, and saves the sessions, so the web app and the phone show the same plan.
