@@ -1,0 +1,129 @@
+import type { DateOnly, PlannedSession, ScheduleExam, ScheduleInput, ScheduleOutput } from '../types';
+import { isSecure, recallsNeeded, recordVisit, toWorkingChunks, type WorkingChunk } from './chunk-state';
+import { addDays, dayToMs } from './dates';
+import { pickFinalPass, pickSession, type PickedSession } from './pick';
+import {
+  canPlace,
+  isBehind,
+  makeCalendar,
+  nextRhythmDay,
+  reserveFinalPass,
+  rhythmDaysLeft,
+  take,
+  type Calendar,
+} from './place';
+import { WarningList } from './warnings';
+
+/** One exam while its plan is being built. */
+interface ExamPlan {
+  exam: ScheduleExam;
+  chunks: WorkingChunk[];
+  finalPassDay: DateOnly | null;
+  /** Normal sessions stop before this day: the final pass day, or the exam day when there is none. */
+  stopDay: DateOnly;
+  /** The next on-rhythm day (rule 7). It stays put while the exam cannot get a session, so the session moves to the next free day. */
+  nextDay: DateOnly;
+}
+
+/** Every date in the input must be a real YYYY-MM-DD day; dates are compared as text below, so bad ones would slip through. */
+function checkDates(input: ScheduleInput): void {
+  dayToMs(input.today);
+  for (const exam of input.exams) dayToMs(exam.examDate);
+  for (const day of input.busyDays) dayToMs(day);
+  for (const k of input.keep) dayToMs(k.scheduledFor);
+}
+
+/** Closest exam first; same day, by id, so the order never depends on the input order. */
+function byExamDate(a: ScheduleExam, b: ScheduleExam): number {
+  if (a.examDate !== b.examDate) return a.examDate < b.examDate ? -1 : 1;
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+}
+
+/**
+ * no_questions: one warning per chunk with no questions (with its chunkId), and
+ * one for the exam when it has no chunks at all or a topic has no chunk with questions.
+ */
+function warnMissingQuestions(exam: ScheduleExam, warnings: WarningList): void {
+  for (const c of exam.chunks) if (c.questionIds.length === 0) warnings.add('no_questions', exam.id, c.id);
+  const topicWithout = exam.topics.some(
+    (t) => !exam.chunks.some((c) => c.topicId === t.id && c.questionIds.length > 0),
+  );
+  if (exam.chunks.length === 0 || topicWithout) warnings.add('no_questions', exam.id);
+}
+
+function toSession(plan: ExamPlan, day: DateOnly, picked: PickedSession, isFinalPass: boolean): PlannedSession {
+  return {
+    examId: plan.exam.id,
+    scheduledFor: day,
+    questionIds: picked.questionIds,
+    isFinalPass,
+    topicIds: picked.topicIds,
+  };
+}
+
+/** One exam on one day: its final pass, a normal session, or nothing. */
+function planDay(
+  plan: ExamPlan,
+  day: DateOnly,
+  calendar: Calendar,
+  warnings: WarningList,
+): PlannedSession | null {
+  if (day === plan.finalPassDay) {
+    const picked = pickFinalPass(plan.chunks);
+    return picked && toSession(plan, day, picked, true);
+  }
+  if (day >= plan.stopDay || !canPlace(calendar, plan.exam.id, day)) return null;
+
+  const onRhythm = day >= plan.nextDay;
+  if (!onRhythm) {
+    const left = rhythmDaysLeft(plan.nextDay, plan.stopDay, plan.exam.examDate);
+    if (!isBehind(recallsNeeded(plan.chunks), left)) return null;
+  }
+  const picked = pickSession(plan.chunks, day, plan.exam.examDate);
+  if (!picked) return null;
+
+  take(calendar, plan.exam.id, day);
+  for (const c of picked.chunks) recordVisit(c, day);
+  if (onRhythm) plan.nextDay = nextRhythmDay(day, plan.exam.examDate);
+  else warnings.add('load_increased', plan.exam.id);
+  return toSession(plan, day, picked, false);
+}
+
+/**
+ * The schedule engine: turns exams, notes, answers and the student's days into
+ * planned sessions. Plain code, no AI, no clock, no randomness: the same input
+ * always gives the same output (rule 11). The input is not changed.
+ */
+export function buildSchedule(input: ScheduleInput): ScheduleOutput {
+  checkDates(input);
+  const warnings = new WarningList();
+  const calendar = makeCalendar(input);
+  const plans: ExamPlan[] = [];
+
+  for (const exam of [...input.exams].sort(byExamDate)) {
+    if (exam.examDate < input.today) {
+      warnings.add('exam_past', exam.id);
+      continue;
+    }
+    warnMissingQuestions(exam, warnings);
+    const chunks = toWorkingChunks(exam);
+    if (chunks.length === 0) continue;
+    const finalPassDay = reserveFinalPass(calendar, exam.id, input.today, exam.examDate);
+    if (finalPassDay === null) warnings.add('not_enough_days', exam.id);
+    plans.push({ exam, chunks, finalPassDay, stopDay: finalPassDay ?? exam.examDate, nextDay: input.today });
+  }
+
+  const sessions: PlannedSession[] = [];
+  const lastExam = plans.reduce<DateOnly>((max, p) => (p.exam.examDate > max ? p.exam.examDate : max), input.today);
+  for (let day = input.today; day < lastExam; day = addDays(day, 1)) {
+    for (const plan of plans) {
+      const session = planDay(plan, day, calendar, warnings);
+      if (session) sessions.push(session);
+    }
+  }
+
+  for (const plan of plans) {
+    if (plan.chunks.some((c) => !isSecure(c))) warnings.add('not_enough_days', plan.exam.id);
+  }
+  return { sessions, warnings: warnings.list() };
+}
