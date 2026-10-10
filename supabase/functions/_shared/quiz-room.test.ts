@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { answerOutcomeError, roomState } from './quiz-room.ts';
+import { describe, expect, it, vi } from 'vitest';
+import { HttpError } from './http.ts';
+import { SERVER_ERROR_MESSAGE, answerOutcomeError, roomState, serverError } from './quiz-room.ts';
 
 const raw = {
   room: {
@@ -61,5 +62,17 @@ describe('answerOutcomeError', () => {
     expect(answerOutcomeError('not_current')).toMatchObject({ status: 409, code: 'not_current_question' });
     expect(answerOutcomeError('too_late')).toMatchObject({ status: 409, code: 'too_late' });
     expect(answerOutcomeError('duplicate')).toMatchObject({ status: 409, code: 'already_answered' });
+  });
+});
+
+describe('serverError', () => {
+  it('logs the database message and hides it from the client', () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const err = serverError('load room', { message: 'relation "quiz_rooms" does not exist' });
+    expect(err).toBeInstanceOf(HttpError);
+    expect(err).toMatchObject({ status: 500, code: 'internal', message: SERVER_ERROR_MESSAGE });
+    expect(err.message).not.toContain('quiz_rooms');
+    expect(log).toHaveBeenCalledWith('quiz: load room failed', { message: 'relation "quiz_rooms" does not exist' });
+    log.mockRestore();
   });
 });

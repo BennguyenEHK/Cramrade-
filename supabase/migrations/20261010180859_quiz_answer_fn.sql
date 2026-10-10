@@ -216,3 +216,54 @@ to service_role;
 drop policy if exists "quiz_answers: player answers current question" on public.quiz_answers;
 revoke insert (room_id, player_id, question_id, answer) on public.quiz_answers from authenticated;
 revoke insert on public.quiz_answers from anon, authenticated;
+
+-- Solo rooms are for one student only. join_quiz_room is the same as in the
+-- initial schema, plus one check: a room in solo mode cannot be joined
+-- (quiz-create adds the solo player itself, with the service role).
+create or replace function public.join_quiz_room(code text, nickname text)
+returns public.quiz_players
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  uid uuid := (select auth.uid());
+  rid uuid;
+  rmode text;
+  player public.quiz_players;
+begin
+  if uid is null then
+    raise exception 'not signed in';
+  end if;
+
+  select r.id, r.mode into rid, rmode
+  from public.quiz_rooms r
+  where r.code = upper(trim(join_quiz_room.code))
+    and r.status <> 'finished';
+
+  if rid is null then
+    raise exception 'no open quiz with that code';
+  end if;
+
+  if rmode = 'solo' then
+    raise exception 'solo rooms cannot be joined';
+  end if;
+
+  select p.* into player
+  from public.quiz_players p
+  where p.room_id = rid and p.user_id = uid;
+
+  if player.id is not null then
+    return player;
+  end if;
+
+  insert into public.quiz_players (room_id, user_id, nickname)
+  values (rid, uid, trim(join_quiz_room.nickname))
+  returning * into player;
+
+  return player;
+end;
+$$;
+
+revoke execute on function public.join_quiz_room(text, text) from public, anon;
+grant execute on function public.join_quiz_room(text, text) to authenticated;

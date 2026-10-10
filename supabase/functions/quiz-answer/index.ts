@@ -7,7 +7,7 @@ import { requireUser } from '../_shared/auth.ts';
 import { db } from '../_shared/db.ts';
 import { HttpError, handle, json } from '../_shared/http.ts';
 import { parseAnswerInput } from '../_shared/quiz-input.ts';
-import { answerOutcomeError, type AnswerOutcome } from '../_shared/quiz-room.ts';
+import { answerOutcomeError, serverError, type AnswerOutcome } from '../_shared/quiz-room.ts';
 import { isCorrectAnswer, type QuestionKind } from '../_shared/scoring.ts';
 
 Deno.serve(
@@ -23,7 +23,7 @@ Deno.serve(
       .select('kind, answer')
       .eq('id', questionId)
       .maybeSingle();
-    if (error) throw new HttpError(500, 'internal', error.message);
+    if (error) throw serverError('read question', error);
     if (!question) throw new HttpError(404, 'question_not_found', 'No question with that id.');
 
     const isCorrect = isCorrectAnswer(question.kind as QuestionKind, answer, question.answer as string);
@@ -35,7 +35,7 @@ Deno.serve(
       p_answer: answer,
       p_is_correct: isCorrect,
     });
-    if (rpcError) throw new HttpError(500, 'internal', rpcError.message);
+    if (rpcError) throw serverError('submit_quiz_answer', rpcError);
 
     const refusal = answerOutcomeError(data.outcome as AnswerOutcome);
     if (refusal) throw new HttpError(refusal.status, refusal.code, refusal.message);

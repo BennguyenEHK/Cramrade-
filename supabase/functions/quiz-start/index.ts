@@ -6,6 +6,7 @@ import { db } from '../_shared/db.ts';
 import { HttpError, handle, json } from '../_shared/http.ts';
 import { parseRoomInput } from '../_shared/quiz-input.ts';
 import { isRoomMember, loadRoom, startRoom } from '../_shared/quiz-db.ts';
+import { serverError } from '../_shared/quiz-room.ts';
 
 Deno.serve(
   handle(async (req) => {
@@ -26,7 +27,7 @@ Deno.serve(
       .from('quiz_players')
       .select('id', { count: 'exact', head: true })
       .eq('room_id', roomId);
-    if (error) throw new HttpError(500, 'internal', error.message);
+    if (error) throw serverError('count players', error);
     if (!count) throw new HttpError(409, 'no_players', 'Wait for at least one player to join.');
 
     const { started, room } = await startRoom(roomId);

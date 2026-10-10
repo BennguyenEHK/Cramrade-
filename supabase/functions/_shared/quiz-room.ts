@@ -1,6 +1,7 @@
 // What the quiz functions send back about a room, and how a refused answer
 // is reported. Pure code, tested with vitest.
 
+import { HttpError } from './http.ts';
 import type { QuizMode } from './quiz-input.ts';
 
 /**
@@ -67,4 +68,16 @@ export function answerOutcomeError(
     case 'duplicate':
       return { status: 409, code: 'already_answered', message: 'You already answered this question.' };
   }
+}
+
+/** What a 500 tells the client. The real cause only goes to the log. */
+export const SERVER_ERROR_MESSAGE = 'Something went wrong on the server';
+
+/**
+ * A database call failed. The Postgres message can name tables, columns
+ * and constraints, so it is logged for us and never sent to the client.
+ */
+export function serverError(where: string, cause: unknown): HttpError {
+  console.error(`quiz: ${where} failed`, cause);
+  return new HttpError(500, 'internal', SERVER_ERROR_MESSAGE);
 }

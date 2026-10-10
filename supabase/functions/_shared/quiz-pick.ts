@@ -53,3 +53,16 @@ export function visibleQuestions<Q extends { noteOwnerId: string; noteGroupId: s
     (row) => row.noteOwnerId === userId || (row.noteGroupId !== null && groupIds.has(row.noteGroupId)),
   );
 }
+
+/**
+ * PostgREST "or" filter for the questions an exam quiz may use: questions
+ * tagged with the exam, or made from a note linked to the exam. The second
+ * part matters when a note is linked to an exam after its questions were
+ * made, so questions.exam_id is still empty. Ids are checked UUIDs, so
+ * they need no quoting.
+ */
+export function examQuestionFilter(examId: string, noteIds: readonly string[]): string {
+  const byExam = `exam_id.eq.${examId}`;
+  const unique = [...new Set(noteIds)].sort();
+  return unique.length === 0 ? byExam : `${byExam},note_id.in.(${unique.join(',')})`;
+}

@@ -8,7 +8,7 @@ import { db } from '../_shared/db.ts';
 import { HttpError, handle, json } from '../_shared/http.ts';
 import { parseAdvanceInput } from '../_shared/quiz-input.ts';
 import { isRoomMember } from '../_shared/quiz-db.ts';
-import { roomState } from '../_shared/quiz-room.ts';
+import { roomState, serverError } from '../_shared/quiz-room.ts';
 
 Deno.serve(
   handle(async (req) => {
@@ -25,7 +25,7 @@ Deno.serve(
       p_room_id: roomId,
       p_expected_index: expectedIndex,
     });
-    if (error) throw new HttpError(500, 'internal', error.message);
+    if (error) throw serverError('advance_quiz_room', error);
     return json({ advanced: data.advanced === true, room: roomState(data) });
   }),
 );

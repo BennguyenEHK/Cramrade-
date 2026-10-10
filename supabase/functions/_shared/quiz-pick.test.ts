@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pickQuestions, visibleQuestions } from './quiz-pick.ts';
+import { examQuestionFilter, pickQuestions, visibleQuestions } from './quiz-pick.ts';
 
 const q = (id: string, chunkId: string) => ({ id, chunkId });
 
@@ -45,5 +45,15 @@ describe('visibleQuestions', () => {
   it('keeps my notes and notes shared with my groups only', () => {
     const ids = visibleQuestions(rows, 'me', new Set(['g1'])).map((r) => r.id);
     expect(ids).toEqual(['mine', 'group']);
+  });
+});
+
+describe('examQuestionFilter', () => {
+  it('uses only the exam id when no note is linked to the exam', () => {
+    expect(examQuestionFilter('e1', [])).toBe('exam_id.eq.e1');
+  });
+
+  it('also takes questions from notes linked to the exam, each note once', () => {
+    expect(examQuestionFilter('e1', ['n2', 'n1', 'n2'])).toBe('exam_id.eq.e1,note_id.in.(n1,n2)');
   });
 });
