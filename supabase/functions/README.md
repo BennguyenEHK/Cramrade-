@@ -77,3 +77,49 @@ Do not point it at the `*.test.ts` files: those are for vitest.
 ## Logs
 
 Supabase dashboard, Edge Functions, pick the function, Logs. `console.error` lines from the code show up there.
+
+## calendar-feed (A7)
+
+Sends a student's exams and planned study sessions to Google Calendar or Apple Calendar as a subscription link. It is public: the long random token in the link is the only key. Cramrade never reads the calendar. Test it on the live project after the pull request merges.
+
+1. Give the test account a feed. If it has no plan yet, run the build-schedule test first, or add one exam and one session:
+
+   ```sql
+   with u as (select id from auth.users where email = 'schedule-test@example.com'),
+   ex as (
+     insert into public.exams (owner_id, title, exam_date)
+     select id, 'Calendar test exam', current_date + 7 from u returning id, owner_id
+   )
+   insert into public.study_sessions (owner_id, exam_id, scheduled_for)
+   select owner_id, id, (current_date + 2) + time '18:00' from ex;
+
+   insert into public.calendar_feeds (user_id)
+   select id from auth.users where email = 'schedule-test@example.com'
+   on conflict (user_id) do nothing;
+
+   select token from public.calendar_feeds
+   where user_id = (select id from auth.users where email = 'schedule-test@example.com');
+   ```
+
+2. Fetch it:
+
+   ```bash
+   REF=<project ref>
+   FEED_TOKEN=<token from step 1>
+   curl -i "https://$REF.supabase.co/functions/v1/calendar-feed?token=$FEED_TOKEN"
+   curl -s -o /dev/null -w "%{http_code} %{size_download}\n" "https://$REF.supabase.co/functions/v1/calendar-feed?token=$(printf 'f%.0s' {1..64})"
+   ```
+
+   The first call gives 200 with `content-type: text/calendar; charset=utf-8`, one "Exam:" event and the "Study:" events. The second call, an unknown token, gives `404 0`.
+
+3. Paste the body of the first call into https://icalendar.org/validator.html. It should report no errors.
+
+4. Google Calendar: "Other calendars", "+", "From URL", paste the link. A "Cramrade" calendar appears with the exam as an all-day event and each session at the student's session time. Google refreshes on its own schedule, often every few hours.
+
+5. Apple Calendar: on a Mac, File, New Calendar Subscription; on an iPhone, Settings, Calendar, Accounts, Add Account, Other, Add Subscribed Calendar. Paste the link. The same events appear.
+
+6. Clean up: remove the subscriptions, then run
+
+   ```sql
+   delete from public.exams where title in ('Calendar test exam', 'Schedule test exam');
+   ```
