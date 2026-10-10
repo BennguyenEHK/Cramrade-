@@ -460,3 +460,7 @@ verify_jwt = true
 [functions.quiz-advance]
 enabled = true
 verify_jwt = true
+[functions.read-syllabus]
+enabled = true
+verify_jwt = true
+static_files = ["./functions/_shared/prompts/read-syllabus.md"]
