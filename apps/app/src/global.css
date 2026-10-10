@@ -25,7 +25,8 @@ a:focus-visible,
 button:focus-visible,
 [role='button']:focus-visible,
 [role='link']:focus-visible,
-[tabindex]:focus-visible {
+[tabindex]:focus-visible,
+input:focus-visible {
   outline: 3px solid var(--cramrade-focus);
   outline-offset: 2px;
   border-radius: 4px;
