@@ -443,3 +443,8 @@ allowed_mime_types = [
 [functions.extract-text]
 enabled = true
 verify_jwt = true
+
+[functions.make-questions]
+enabled = true
+verify_jwt = true
+static_files = ["./functions/_shared/prompts/make-questions.md"]
