@@ -443,3 +443,7 @@ allowed_mime_types = [
 [functions.extract-text]
 enabled = true
 verify_jwt = true
+
+[functions.quiz-create]
+enabled = true
+verify_jwt = true
