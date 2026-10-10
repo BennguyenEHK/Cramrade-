@@ -271,21 +271,14 @@ Words used in the labels:
 - Done when: An exam can be added, edited, deleted, and is still there after reloading.
 - Needs first: A2, B2
 
-**B4. File upload**
-- Type: Part of a page (upload button)
-- Where it runs: Web app and phone app
-- Tools: Expo document picker, Supabase Storage, Supabase database
-- What it means: A button to pick Word (.docx), PDF, text or Markdown files from the computer. The app creates the note, uploads the file to the private `uploads` folder at `<user id>/<note id>/<file name>` with a content type picked from the file's extension, and calls the server function `extract-text` (A4a), which pulls the text out and deletes the file. The screen shows "processing", then "ready", or the failure reason with a way to try another file. The same button uploads a syllabus (the note is marked as a syllabus) and can link notes to an exam.
-- Done when: Uploading a PDF and a Word file results in readable text saved as Notes, and a scanned PDF shows its failure reason.
-- Needs first: B2, A4a (use a fake answer until it is ready)
 **B4. File upload** PARTIALLY
 - Status: Built 2026-10-10 on `b4-file-upload`, stacked on `b3-exam-screen`. Notes screen, picker, extracted-text reader, authenticated `extract-text` Edge Function and atomic note-save migration are ready for review. Eight extraction/HTTP tests and isolated PostgreSQL checks pass. The live function returns NOT_FOUND, so Dev A must review and deploy the backend before the live PDF/Word save-and-reload check can pass. Details and limits: `apps/app/B4-checks.md`.
 - Type: Part of a page (upload button) plus a server function
 - Where it runs: Web app and phone app, with the text work on the server
 - Tools: Expo document picker, Supabase Edge Function, Supabase database
-- What it means: A button to pick Word, PDF, text or Markdown files from the computer. The server pulls the text out and throws the file itself away.
-- Done when: Uploading a PDF and a Word file results in readable text saved as Notes.
-- Needs first: B2
+- What it means: A button to pick Word (.docx), PDF, text or Markdown files from the computer. The app sends the file straight to the server function `extract-text` (A4a) as a form upload with a fresh `uploadId`; the function pulls the text out, saves the chunks and keeps no file. The same button can mark the file as a syllabus (`isSyllabus`) and link the notes to an exam (`examId`). The screen shows the function's answer: ready, or the failure reason with a way to try another file. Errors come back as `{ error: { code, message } }`.
+- Done when: Uploading a PDF and a Word file results in readable text saved as Notes, and a scanned PDF shows its failure reason.
+- Needs first: B2, A4a
 
 **B5. Syllabus confirm screen**
 - Type: App screen (a page)
