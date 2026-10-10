@@ -283,8 +283,8 @@ A Node script at `scripts/quiz-e2e.mjs` (run by hand with `node scripts/quiz-e2e
 
 ## 10. Errors, limits and safety
 
-- Every function returns JSON `{ error: { code, message } }` with 400 `bad_input` (also for a wrong HTTP method), 401 `not_signed_in`, 403 `not_yours` or `guest_not_allowed`, 404 `not_found`, 409 (too late or duplicate), 502 `ai_failed`, 500 `internal`.
-- The AI is called with a 60-second timeout per call; one retry on a network error, none on a bad answer.
+- Every function returns JSON `{ error: { code, message } }` with 400 `bad_input` (also for a wrong HTTP method), 401 `not_signed_in`, 403 `not_yours` or `guest_not_allowed`, 404 `not_found`, 409 (too late or duplicate), 502 `ai_failed`, 500 `internal`. A function may use a more specific code inside the same status class when the screen needs to tell cases apart (the quiz functions use `room_not_found`, `not_host`, `not_in_room`, `too_late`, `already_answered`); the status never changes, and every code a function uses is listed in its README section. A 500 never carries the database's own message; it is logged on the server and the client gets a generic sentence.
+- The AI is called with a 60-second timeout per call; one retry on a network error or a 429 or 5xx status, none on a bad answer. Two attempts plus the pause come to about 2 minutes, inside the 150-second limit, so a function never makes two AI calls in sequence in one request.
 - Nothing is stored that the product rules forbid: files are deleted after extraction, syllabus dates are returned not saved, the AI never edits chunks.
 - The service-role key and Gemini key are function secrets (`supabase secrets set`), never in the repo. `.env.example` under `supabase/functions` lists their names with empty values.
 - CPU time: parsing a 50-page PDF with `unpdf` is well under 2 seconds. The question maker's CPU work is JSON handling only; waiting on Gemini is I/O and does not count.
