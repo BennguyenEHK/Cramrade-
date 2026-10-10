@@ -445,6 +445,9 @@ allowed_mime_types = [
 enabled = true
 verify_jwt = true
 
+[functions.calendar-feed]
+# Calendar apps cannot send a login. The token in the link is the key.
+verify_jwt = false
 [functions.make-questions]
 enabled = true
 verify_jwt = true
