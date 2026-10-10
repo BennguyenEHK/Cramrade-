@@ -229,9 +229,10 @@ alter publication supabase_realtime add table public.quiz_rooms, public.quiz_pla
 -- ---------------------------------------------------------------------------
 -- 6. The "uploads" bucket
 -- ---------------------------------------------------------------------------
--- Private. Files live at <user id>/<note id>/<file name> for a few seconds:
--- extract-text deletes them once the text is out. The same settings are in
--- supabase/config.toml for local stacks; this insert is what creates the
+-- Private. Kept for later photo uploads (phase 2), at
+-- <user id>/<note id>/<file name>, deleted once the text is out. extract-text
+-- does not use it: files go straight to that function. The same settings are
+-- in supabase/config.toml for local stacks; this insert is what creates the
 -- bucket on the live project.
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

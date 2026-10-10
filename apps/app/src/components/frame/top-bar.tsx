@@ -6,17 +6,22 @@ import { Content } from '@/components/frame/content';
 import { Wordmark } from '@/components/frame/wordmark';
 import { AppText } from '@/components/ui/text';
 import { Layout, Spacing } from '@/constants/theme';
+import { useAuth } from '@/features/auth/auth-provider';
 import { useLayout } from '@/hooks/use-layout';
 import { useTheme } from '@/hooks/use-theme';
 
-const NAV: { href: Href; label: string }[] = [
-  { href: '/', label: 'Home' },
-  { href: '/workspace', label: 'Workspace' },
-  { href: '/sign-in', label: 'Sign in' },
-];
+function navItems(signedIn: boolean): { href: Href; label: string }[] {
+  return [
+    { href: '/', label: 'Home' },
+    { href: '/workspace', label: 'Workspace' },
+    // One page shows the form when signed out and the account when signed in.
+    { href: '/sign-in', label: signedIn ? 'Account' : 'Sign in' },
+  ];
+}
 
 /**
  * The frame's top bar: wordmark on the left, the three main links on the right.
+ * The last link reads "Account" once the student is signed in.
  * Children of `Link asChild` get one flat style object (see LinkButton).
  */
 export function TopBar() {
@@ -24,6 +29,7 @@ export function TopBar() {
   const { wide } = useLayout();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
+  const { session } = useAuth();
 
   return (
     <View
@@ -40,10 +46,10 @@ export function TopBar() {
         </Link>
 
         <View style={[styles.links, { gap: wide ? Spacing.lg : Spacing.md }]}>
-          {NAV.map((item) => {
+          {navItems(session !== null).map((item) => {
             const active = pathname === item.href;
             return (
-              <Link key={item.label} href={item.href} asChild>
+              <Link key={String(item.href)} href={item.href} asChild>
                 <Pressable
                   role="link"
                   aria-current={active ? 'page' : undefined}

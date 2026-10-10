@@ -17,6 +17,18 @@ export type {
 } from './quiz';
 export type { CalendarFeed } from './calendar';
 export type { StudySettings, BusyDay } from './settings';
+export type {
+  Pace,
+  ScheduleWarning,
+  ScheduleWarningCode,
+  ChunkHistory,
+  ScheduleChunk,
+  ScheduleTopic,
+  ScheduleExam,
+  ScheduleInput,
+  PlannedSession,
+  ScheduleOutput,
+} from './schedule';
 
 // The allowed-value lists behind the union types, for pickers and checks.
 // Agreed in T1 (2026-10-10): screens read these instead of typing the values again.
@@ -26,3 +38,4 @@ export { NOTE_SOURCES, NOTE_STATUSES } from './note';
 export { QUESTION_KINDS } from './question';
 export { QUIZ_ROOM_STATUSES, QUIZ_MODES } from './quiz';
 export { STUDY_SESSION_STATUSES } from './session';
+export { PACES, SESSIONS_PER_DAY, SCHEDULE_WARNING_CODES } from './schedule';
