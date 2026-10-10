@@ -15,5 +15,5 @@ The screen only shows exams owned by the signed-in account. Changing accounts re
 - Sign out. Workspace should ask you to sign in.
 
 Automated calendar validation: `node --experimental-strip-types --test apps/app/src/features/exams/dates.test.mjs`.
-The final live persistence check requires a signed-in account; do not mark B3 done before it passes.
+Verified on 2026-10-10 against the live Supabase project with a signed-in account: creating an exam survived reload, editing its name and date survived reload, and deleting it with the user's permission stayed deleted after reload. The temporary test exam was removed. Calendar selection and empty-name validation also passed in the browser; automated date checks covered invalid dates and leap years. Both 390px and 1280px layouts fit without horizontal overflow. Type checking, app lint and the production web export passed. Native devices and the disconnected-network checklist above have not been tested.
 

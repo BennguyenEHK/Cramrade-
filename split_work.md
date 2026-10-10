@@ -253,7 +253,8 @@ Words used in the labels:
 - Done when: A new user can sign up in a browser, close the tab, come back, and still be logged in.
 - Needs first: A1, T2
 
-**B3. Exam screen**
+**B3. Exam screen** DONE
+- Status: Done 2026-10-10 on `b3-exam-screen`. The signed-in Workspace supports adding, editing and deleting exams, quizzes and competitions, with a calendar date picker. Create, edit and delete were checked against live Supabase with a reload after each action; the temporary test exam was removed. Date checks, type checking, lint and the web build passed. Details: `apps/app/B3-checks.md`.
 - Type: App screen (a page)
 - Where it runs: Web app and phone app
 - Tools: Expo (React Native), Supabase database
