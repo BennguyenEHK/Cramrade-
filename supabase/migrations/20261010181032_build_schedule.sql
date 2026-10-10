@@ -122,6 +122,16 @@ begin
     and ss.status = 'planned'
     and exists (select 1 from public.attempts a where a.session_id = ss.id);
 
+  -- A planned session from before p_from that was never answered is over:
+  -- mark it skipped so the schedule never shows a stale planned session in the past.
+  update public.study_sessions ss
+  set status = 'skipped'
+  where ss.owner_id = p_owner
+    and ss.status = 'planned'
+    and ss.exam_id = any (p_exam_ids)
+    and ss.scheduled_for < p_from
+    and not exists (select 1 from public.attempts a where a.session_id = ss.id);
+
   -- Only future planned sessions are replaced. Done and skipped stay.
   delete from public.study_sessions ss
   where ss.owner_id = p_owner

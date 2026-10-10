@@ -28,8 +28,12 @@ const RATE_SCHEMA = {
 };
 const MAX_TOPICS_PER_RUN = 10;
 // Rating stops after this long so the whole call stays far inside 150 s.
-// Topics left unrated are rated on the next run.
+// Topics left unrated are rated on the next run. One rating call has at most
+// two attempts of RATING_TIMEOUT_MS each, so a call only starts while the
+// budget left covers both attempts plus a margin.
 const RATING_BUDGET_MS = 60_000;
+const RATING_TIMEOUT_MS = 20_000;
+const RATING_MIN_REMAINING_MS = 45_000;
 const SAMPLE_CHARS = 1500;
 
 type SavedSession = SessionRowInput & { id: string };
@@ -57,7 +61,7 @@ async function rateTopics(rows: ScheduleRows): Promise<number> {
   const started = Date.now();
   let rated = 0;
   for (const pick of picks) {
-    if (Date.now() - started > RATING_BUDGET_MS) break;
+    if (RATING_BUDGET_MS - (Date.now() - started) < RATING_MIN_REMAINING_MS) break;
     try {
       const sampleChunks = pick.chunkIds
         .map((id) => (textOf.get(id) ?? '').slice(0, SAMPLE_CHARS))
@@ -66,7 +70,7 @@ async function rateTopics(rows: ScheduleRows): Promise<number> {
         'rate-difficulty',
         { topicTitle: pick.title, sampleChunks },
         RATE_SCHEMA,
-        { temperature: 0.2 },
+        { temperature: 0.2, timeoutMs: RATING_TIMEOUT_MS },
       );
       const difficulty = parseDifficulty(answer);
       if (difficulty === null) continue;
