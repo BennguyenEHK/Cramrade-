@@ -156,6 +156,7 @@ Words used in the labels:
 - Needs first: A1, B1
 
 **A4a. Text extractor**
+- Status: Merged with Dev B's B4 upload path on 2026-10-10: the file goes straight to the function, no Storage.
 - Type: Server function (an API) plus database changes
 - Where it runs: Server
 - Tools: Supabase Edge Function, Supabase Storage (temporary), `unpdf` (PDF), `mammoth` (Word), Supabase database
