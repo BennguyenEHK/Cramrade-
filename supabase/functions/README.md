@@ -69,7 +69,7 @@ For extract-text, `_fixtures/try-extract.sh` does the whole round trip (sign in,
 Only if Deno is already installed (do not install it just for this). Keep its download cache on D: inside the repo's ignored `.local-deps` folder:
 
 ```sh
-DENO_DIR=.local-deps/deno deno check supabase/functions/extract-text/index.ts
+DENO_DIR=.local-deps/deno deno check --node-modules-dir=none supabase/functions/extract-text/index.ts
 ```
 
 Do not point it at the `*.test.ts` files: those are for vitest.

@@ -424,8 +424,9 @@ enabled = true
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
 
 # --- Added in A4a -----------------------------------------------------------
-# The uploads bucket for local stacks. On the live project the bucket is
-# created by the server_side migration; this block does not reach it.
+# The uploads bucket. The GitHub integration may create it on the live project
+# from this block, and the server_side migration also inserts it with
+# "on conflict do update", so both paths give the same bucket.
 [storage.buckets.uploads]
 public = false
 file_size_limit = "20MiB"
