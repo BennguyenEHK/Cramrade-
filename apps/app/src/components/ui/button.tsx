@@ -12,6 +12,7 @@ type Props = {
   busy?: boolean;
   busyLabel?: string;
   disabled?: boolean;
+  selected?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -23,6 +24,7 @@ export function Button({
   busy = false,
   busyLabel,
   disabled = false,
+  selected,
   style,
 }: Props) {
   const { colors } = useTheme();
@@ -32,6 +34,7 @@ export function Button({
     <Pressable
       role="button"
       aria-disabled={inactive}
+      aria-pressed={selected}
       aria-busy={busy}
       disabled={inactive}
       onPress={onPress}
@@ -53,6 +56,7 @@ export function Button({
 const styles = StyleSheet.create({
   base: {
     alignSelf: 'flex-start',
+    maxWidth: '100%',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.control,

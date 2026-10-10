@@ -1,4 +1,4 @@
-import type { Chunk, Note } from '@cramrade/shared';
+import type { Chunk, Exam, Note } from '@cramrade/shared';
 import * as DocumentPicker from 'expo-document-picker';
 import { randomUUID } from 'expo-crypto';
 import { useEffect, useRef, useState } from 'react';
@@ -12,8 +12,10 @@ import { AppText } from '@/components/ui/text';
 import { Layout, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { listNotes, readChunks } from '@/lib/note-data';
+import { listExams } from '@/lib/exam-data';
 import { releaseFile } from './picked-file';
 import { MAX_UPLOAD_BYTES, uploadNotes } from './upload';
+import { WorkspaceLinks } from '@/components/frame/workspace-page';
 
 type Selection = { asset: DocumentPicker.DocumentPickerAsset; id: string };
 type Preview = { id: string; chunks: Chunk[]; loading: boolean; error: string };
@@ -21,6 +23,10 @@ type Preview = { id: string; chunks: Chunk[]; loading: boolean; error: string };
 export function NotesScreen({ ownerId }: { ownerId: string }) {
   const { colors } = useTheme();
   const [notes, setNotes] = useState<Note[]>([]);
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [examId, setExamId] = useState<string | null>(null);
+  const [isSyllabus, setIsSyllabus] = useState(false);
+  const [choosingExam, setChoosingExam] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [selection, setSelection] = useState<Selection | null>(null);
@@ -45,6 +51,13 @@ export function NotesScreen({ ownerId }: { ownerId: string }) {
   useEffect(() => {
     alive.current = true;
     let active = true;
+    listExams(ownerId)
+      .then((result) => {
+        if (active) setExams(result);
+      })
+      .catch(() => {
+        if (active) setError('Could not load exam choices. Refresh this page to link an exam.');
+      });
     listNotes(ownerId)
       .then((result) => {
         if (active) setNotes(result);
@@ -128,11 +141,25 @@ export function NotesScreen({ ownerId }: { ownerId: string }) {
     controller.current = abort;
     const timeout = setTimeout(() => abort.abort(), 120_000);
     try {
-      await uploadNotes(current.asset, current.id, abort.signal);
+      const result = await uploadNotes(current.asset, current.id, abort.signal, {
+        examId,
+        isSyllabus,
+      });
       if (!alive.current) return;
       discard();
-      setMessage('Your notes are saved. Open them below to check the extracted text.');
+      if (result.status === 'ready') {
+        setMessage('Your notes are saved. Open them below to check the extracted text.');
+      } else if (result.status === 'processing') {
+        setMessage(
+          'Your file is still processing. Refresh your notes shortly to check its progress.',
+        );
+      }
       await refresh();
+      if (alive.current && result.status === 'failed') {
+        setError(
+          `${result.reason || 'The file could not be read.'} Choose a corrected file to upload again.`,
+        );
+      }
     } catch (cause) {
       if (alive.current)
         setError(cause instanceof Error ? cause.message : 'Could not upload this file. Try again.');
@@ -172,20 +199,71 @@ export function NotesScreen({ ownerId }: { ownerId: string }) {
             Bring the notes you already study from. Only their text is saved to your account.
           </AppText>
         </View>
-        <LinkButton href="/workspace" variant="quiet">
-          Your exams
-        </LinkButton>
+        <WorkspaceLinks />
         <View
           style={[styles.upload, { backgroundColor: colors.surface, borderColor: colors.line }]}
         >
           <AppText variant="title">Add a file</AppText>
+          <AppText variant="small" tone="inkMuted">
+            Optional: choose an exam and file purpose before selecting a file.
+          </AppText>
+          <Button
+            variant="quiet"
+            disabled={busy || !!selection}
+            onPress={() => setChoosingExam(!choosingExam)}
+          >
+            {examId
+              ? `Exam: ${exams.find((exam) => exam.id === examId)?.title ?? 'Selected exam'}`
+              : 'Link an exam (optional)'}
+          </Button>
+          {choosingExam && !selection && (
+            <View style={styles.heading}>
+              <Button
+                variant="quiet"
+                disabled={busy}
+                onPress={() => {
+                  setExamId(null);
+                  setChoosingExam(false);
+                }}
+              >
+                No linked exam
+              </Button>
+              {exams.map((exam) => (
+                <Button
+                  key={exam.id}
+                  variant="quiet"
+                  disabled={busy}
+                  onPress={() => {
+                    setExamId(exam.id);
+                    setChoosingExam(false);
+                  }}
+                >{`${exam.title} — ${exam.examDate}`}</Button>
+              ))}
+              {exams.length === 0 && (
+                <AppText>No exams yet. You can upload without linking one.</AppText>
+              )}
+            </View>
+          )}
+          <Button
+            variant="quiet"
+            disabled={busy || !!selection}
+            onPress={() => setIsSyllabus(!isSyllabus)}
+          >
+            {isSyllabus ? 'File purpose: syllabus' : 'File purpose: study notes'}
+          </Button>
+          {isSyllabus && (
+            <AppText variant="small" tone="inkMuted">
+              This saves the syllabus text only. No exam dates are added automatically.
+            </AppText>
+          )}
           <AppText tone="inkMuted" style={styles.prose}>
-            PDF, Word (.docx), text or Markdown. Up to 4 MB and 5 PDF pages per upload. Split longer
-            PDFs into smaller files. Images and handwriting are not read yet.
+            PDF, Word (.docx), text or Markdown. Up to 4 MB per upload. Split longer PDFs into
+            smaller files. Images and handwriting are not read yet.
           </AppText>
           <AppText variant="small" tone="inkMuted" style={styles.prose}>
             Your file is sent to Cramrade’s server to extract its text, then discarded. Your
-            original stays on your device. No AI is used in this upload step.
+            original stays on your device. Text extraction does not use AI. Saved text can be used
+            to make study questions with AI.
           </AppText>
           {selection && <AppText bold>{selection.asset.name}</AppText>}
           <View style={styles.actions}>
@@ -233,9 +311,20 @@ export function NotesScreen({ ownerId }: { ownerId: string }) {
                     ? ' (failed)'
                     : ''}
               </AppText>
-              <Button variant="quiet" onPress={() => void showText(note.id)}>
+              {note.status === 'failed' && (
+                <AppText role="alert">
+                  {note.failureReason || 'This file could not be read.'} Choose a corrected file to
+                  upload again.
+                </AppText>
+              )}
+              <Button
+                variant="quiet"
+                disabled={note.status !== 'ready'}
+                onPress={() => void showText(note.id)}
+              >
                 Read extracted text
               </Button>
+              {note.isSyllabus && note.status === 'ready' && <LinkButton href="/syllabus" variant="quiet">Find and confirm syllabus dates</LinkButton>}
               {preview?.id === note.id && (
                 <View style={styles.heading}>
                   {preview.loading ? (

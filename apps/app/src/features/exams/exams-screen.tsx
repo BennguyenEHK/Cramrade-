@@ -5,13 +5,14 @@ import { Page } from '@/components/frame/page';
 import { PageHead } from '@/components/frame/page-head';
 import { Section } from '@/components/frame/section';
 import { Button } from '@/components/ui/button';
-import { LinkButton } from '@/components/ui/link-button';
 import { AppText } from '@/components/ui/text';
 import { TextField } from '@/components/ui/text-field';
 import { Radius, Spacing } from '@/constants/theme';
 import { useLayout } from '@/hooks/use-layout';
 import { useTheme } from '@/hooks/use-theme';
 import { deleteExam, listExams, saveExam } from '@/lib/exam-data';
+import { rebuildPlan } from '@/lib/plan-data';
+import { WorkspaceLinks } from '@/components/frame/workspace-page';
 import { DatePicker } from './date-picker';
 import { dateOnly, formatDate, parseDate } from './dates';
 
@@ -57,6 +58,7 @@ export function ExamsScreen({ ownerId }: { ownerId: string }) {
       const saved = await saveExam(ownerId, { title, examDate: date, kind }, editing?.id);
       setExams(current => [...current.filter(exam => exam.id !== saved.id), saved].sort((a, b) => a.examDate.localeCompare(b.examDate)));
       setMessage(editing ? 'Exam updated.' : 'Exam added.'); resetForm();
+      await rebuildPlan().catch(() => setMessage('Exam saved. The plan could not rebuild. Open Schedule and choose Rebuild plan to retry.'));
     } catch { setError('Could not save your exam. Your changes are still here. Check your connection and try again.'); }
     finally { lock.current = false; setBusy(false); }
   }
@@ -73,7 +75,7 @@ export function ExamsScreen({ ownerId }: { ownerId: string }) {
   }
   return <Page><PageHead title="Your exams" /><Section style={styles.section}>
     <View style={styles.heading}><AppText variant="headline">Your exams</AppText><AppText tone="inkMuted">Start with the date you’re working toward. Your exams are saved to your account.</AppText></View>
-    <LinkButton href="/notes" variant="quiet">Your notes</LinkButton>
+    <WorkspaceLinks />
     {!!error && <AppText role="alert">{error}</AppText>}
     {!!message && <AppText accessibilityLiveRegion="polite">{message}</AppText>}
     <View style={[styles.columns, wide && styles.wide]}>
