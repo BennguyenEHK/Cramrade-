@@ -14,7 +14,7 @@ The plan has two phases:
 
 One task = one branch = one pull request.
 
-The full design is in `docs/superpowers/specs/2026-10-03-cramrade-design.md`. That file is not in the repo yet; Dev A has it.
+The full design is in `docs/superpowers/specs/2026-10-03-cramrade-design.md`. That file is not in the repo yet; Dev A has it. The server side (A4a to A8) is designed in `docs/superpowers/specs/2026-10-10-server-side-design.md`.
 
 ---
 
@@ -32,7 +32,7 @@ The web app and the phone app are made from the same code. Both connect to the s
 
 ```
   Web app (browser)  ----+
-                         +----  Supabase server  ----  Claude AI
+                         +----  Supabase server  ----  Gemini AI
   Phone app          ----+      (account, notes,       (reads the syllabus,
   (alarms, camera)              questions, plan,        writes questions)
                                 live quiz)
@@ -98,11 +98,11 @@ Words used in the labels:
 - Done when: The shapes are in `packages/shared` and both of you have said yes.
 
 **T2. Create the accounts** DONE
-- Status: Supabase project `cramrade` created (region US East, Ohio), Expo and Claude accounts exist, GitHub is linked to Expo and Supabase. Open point on 2026-10-05: the Supabase organization is on the free plan, which pauses the project after 7 idle days. Upgrade or move it.
+- Status: Supabase project `cramrade` created (region US East, Ohio), Expo and Claude accounts exist, GitHub is linked to Expo and Supabase. Open point on 2026-10-05: the Supabase organization is on the free plan, which pauses the project after 7 idle days. Upgrade or move it. Update 2026-10-10: the AI provider is now Gemini; Dev A holds the Gemini API key.
 - Type: Setup, no code
 - Where it runs: Outside the repo, on each service's website
-- Tools: Supabase dashboard, Expo account, Claude Console (for the API key), `.env` files
-- What it means: Supabase project (the paid one), Expo (also used for hosting the web app), and a Claude API key. Google Play and Apple accounts wait until phase 2.
+- Tools: Supabase dashboard, Expo account, Google AI Studio (for the Gemini API key), `.env` files
+- What it means: Supabase project (the paid one), Expo (also used for hosting the web app), and a Gemini API key. Google Play and Apple accounts wait until phase 2.
 - Done when: Both of you can log in to each one. Keys are in `.env` files that are not in git.
 
 **T3. Write the shared `CLAUDE.md`** DONE
@@ -155,29 +155,37 @@ Words used in the labels:
 - Done when: The empty app opens at a public web address, and a merged change shows up there without anyone uploading by hand.
 - Needs first: A1, B1
 
+**A4a. Text extractor**
+- Type: Server function (an API) plus database changes
+- Where it runs: Server
+- Tools: Supabase Edge Function, Supabase Storage (temporary), `unpdf` (PDF), `mammoth` (Word), Supabase database
+- What it means: The server half of file upload, moved here from B4 because it is server code and A4 and A6 need it. The app puts the file in a private storage folder and calls `extract-text`. The server pulls the text out of PDF, Word (.docx), .txt and .md files, cuts it into numbered chunks, saves them, deletes the file, and starts the question maker. A scanned PDF with no text, or a file type it cannot read, makes the note "failed" with a one-line reason the screen can show. The file is deleted either way. This task also adds the database changes the rest of the server work needs (new fields on notes, topics, sessions and quizzes, study settings, busy days, the uploads folder) and the shared server code (Gemini calls, sign-in checks, chunking, quote check).
+- Done when: A typed PDF, a Word file and a text file uploaded by a test account become ready notes with readable chunks, a scanned PDF becomes a failed note with the reason "no readable text, this looks like a scanned image", the uploads folder is empty afterwards every time, and Dev B has said yes to the data shape changes.
+- Needs first: T1, A2
+
 **A4. Syllabus reader (server part)**
 - Type: Server function (an API)
 - Where it runs: Server
-- Tools: Supabase Edge Function, Claude API
+- Tools: Supabase Edge Function, Gemini API
 - What it means: Server code that takes the text of an uploaded syllabus and asks the AI for the exam and quiz dates and the topics for each. It returns a list of proposals. It saves nothing by itself. If it finds no dates, it says so and never guesses. Dev B builds the screen that shows the list (B5).
 - Done when: A real syllabus returns the right dates and topics, and a file with no dates returns a clear "no dates found" answer.
-- Needs first: B4 (it reuses how text is pulled out of an uploaded file)
+- Needs first: A4a (it reads the text the extractor saved)
 
 **A5. Schedule engine**
-- Type: Code function (pure logic) with automatic tests
-- Where it runs: Shared code, run by the server
-- Tools: TypeScript, Vitest (test runner), Supabase database to save the plan
-- What it means: Plain code (no AI) that takes exam dates and topics and returns a list of dated study sessions. Sessions get closer together as the exam gets near. Each session has 5 to 7 questions. The plan is saved on the server so web and phone show the same one.
-- Done when: Given "exam in 14 days", it returns a plan ending on exam day. Tests cover: exam tomorrow, exam in 3 months, two exams in the same week, exam already past.
-- Needs first: T1 (the agreed data shapes)
+- Type: Code function (pure logic) with automatic tests, plus the server function that runs it
+- Where it runs: Shared code, run by the server (`build-schedule`)
+- Tools: TypeScript, Vitest (test runner), Supabase Edge Function, Supabase database to save the plan, Gemini API (topic difficulty only)
+- What it means: Plain code (no AI) that turns exams, the questions made from the student's notes, the student's answers so far, and their settings into a list of dated study sessions. It is "answer driven": each piece of the notes keeps coming back until the student has answered it correctly in three separate sessions, and a wrong answer brings it back in the next session. Sessions are sparse while the exam is far away and daily in the last week. Each session has 5 to 7 questions from 2 or 3 topics of one exam. The day before each exam is a final pass over every topic; exam day itself is empty. Missed sessions are not piled up: the plan is simply rebuilt from today. The inputs are: today's date, every upcoming exam with its topics and questions, the answer history, the pace (light, normal or heavy: at most 1, 2 or 3 sessions a day), weekdays off and busy days, and the sessions already done or skipped. Before any answers exist, the AI's difficulty rating for each topic (1 to 5) decides what comes first; after that only the answers count. The plan is saved on the server so web and phone show the same one.
+- Done when: Given "exam in 14 days", it returns a plan that ends with a final pass the day before the exam and nothing on exam day. Tests cover: exam tomorrow, exam in 14 days, exam in 3 months, exam already past, two exams in the same week, a busy week, a skipped session, a piece answered right three times leaving the plan, a wrong answer coming back next session, and the same input always giving the same plan.
+- Needs first: T1 (the agreed data shapes), A4a (the database changes: study settings, busy days, topic difficulty)
 
 **A6. Question maker**
 - Type: Server function (an API)
 - Where it runs: Server
-- Tools: Supabase Edge Function, Claude API, Supabase database
-- What it means: Server code that sends note text to Claude and gets back questions. Every question must point to the exact piece of note it came from. Code then checks that piece really exists.
+- Tools: Supabase Edge Function, Gemini API, Supabase database
+- What it means: Server code that sends note text to Gemini and gets back questions. It starts by itself as soon as a note's text is ready; there is no button. Every question must point to the exact piece of note it came from. Code then checks that piece really exists.
 - Done when: 10 pages of notes produce at least 20 questions, each with a working link to its source text. Questions without a real source are thrown away.
-- Needs first: B4 (real notes to read)
+- Needs first: A4a (real notes to read)
 
 **A7. Send to calendar**
 - Type: Server function (a calendar link) plus a button in the app
@@ -191,9 +199,9 @@ Words used in the labels:
 - Type: Server functions (APIs) plus a live channel
 - Where it runs: Server
 - Tools: Supabase Edge Functions, Supabase Realtime, Supabase database
-- What it means: The live game: create a room, hand out a join link, send each question to everyone at the same time, run the timer, count the score. Questions go out through Supabase's live messaging. The server writes down when each question started and scores every answer against that time, so nobody can cheat.
-- Done when: 5 browsers join one room, play 5 questions, and all show the same final scores.
-- Needs first: A6
+- What it means: The live game: create a room, hand out a join link, send each question to everyone at the same time, run the timer, count the score. Questions go out through Supabase's live messaging. The server writes down when each question started and scores every answer against that time, so nobody can cheat. The game runs by itself: each question gets the same answering time, then the right answer and scores show for a few seconds, then the next question comes, with nobody pressing "next". Any player's screen may ask the server to move on once the time is up, and the server moves exactly once. A right answer scores 1000 points if instant, down to 500 at the last moment, measured by the server's clock; a wrong answer scores 0. A solo mode uses the same room with one player and starts at once.
+- Done when: 5 browsers join one room, play 5 questions, and all show the same final scores. A solo quiz can be played from start to finish.
+- Needs first: A4a, A6
 
 **Phase 2: phone app**
 
@@ -224,7 +232,7 @@ Words used in the labels:
 **A12. Cited lesson**
 - Type: Server function (an API) plus a screen
 - Where it runs: Server, with one screen in the app
-- Tools: Supabase Edge Function, Claude API, Expo
+- Tools: Supabase Edge Function, Gemini API, Expo
 - What it means: A 5 to 10 minute explanation of one topic where every sentence links to the note it came from.
 - Done when: A lesson shows only sentences whose source was verified by code.
 - Needs first: A6
@@ -261,12 +269,12 @@ Words used in the labels:
 - Needs first: A2, B2
 
 **B4. File upload**
-- Type: Part of a page (upload button) plus a server function
-- Where it runs: Web app and phone app, with the text work on the server
-- Tools: Expo document picker, Supabase Edge Function, Supabase database
-- What it means: A button to pick Word, PDF, text or Markdown files from the computer. The server pulls the text out and throws the file itself away.
-- Done when: Uploading a PDF and a Word file results in readable text saved as Notes.
-- Needs first: B2
+- Type: Part of a page (upload button)
+- Where it runs: Web app and phone app
+- Tools: Expo document picker, Supabase Storage, Supabase database
+- What it means: A button to pick Word (.docx), PDF, text or Markdown files from the computer. The app creates the note, uploads the file to the private `uploads` folder at `<user id>/<note id>/<file name>` with a content type picked from the file's extension, and calls the server function `extract-text` (A4a), which pulls the text out and deletes the file. The screen shows "processing", then "ready", or the failure reason with a way to try another file. The same button uploads a syllabus (the note is marked as a syllabus) and can link notes to an exam.
+- Done when: Uploading a PDF and a Word file results in readable text saved as Notes, and a scanned PDF shows its failure reason.
+- Needs first: B2, A4a (use a fake answer until it is ready)
 
 **B5. Syllabus confirm screen**
 - Type: App screen (a page)
@@ -296,15 +304,31 @@ Words used in the labels:
 - Type: Two app screens (host page and play page)
 - Where it runs: Host page: web only. Play page: web app and phone app
 - Tools: Expo, Supabase Realtime, Supabase Auth (guest sign-in)
-- What it means: The host screen (question, timer, scoreboard) for a computer. The play screen where a classmate opens the link, picks a nickname and answers. Guests need no account and no install.
-- Done when: A person with only a browser joins and finishes a quiz. A player who drops out can rejoin and keep their score.
+- What it means: The host screen (question, timer, scoreboard) for a computer. The play screen where a classmate opens the link, picks a nickname and answers. Guests need no account and no install. The quiz moves by itself: the screens show the question and a countdown, then the right answer and scores for a few seconds, then the next question, all timed from the server's clock. Nobody presses "next". A "play alone" button starts a solo quiz at once with the same screens.
+- Done when: A person with only a browser joins and finishes a quiz. A player who drops out can rejoin and keep their score. A solo quiz starts with one button and plays to the end.
 - Needs first: A8
+
+**B13. Study settings screen**
+- Type: App screen (a small page)
+- Where it runs: Web app and phone app
+- Tools: Expo, Supabase database
+- What it means: A short settings page for the study plan: pace (light, normal or heavy), weekdays off, the usual time for a session, and the time zone. A "busy in the next few days?" prompt lets the student mark dates they cannot study, saved as busy days. After any change the app asks the server to rebuild the plan (`build-schedule`).
+- Done when: Changing the pace or marking a busy day is saved, is still there after a reload, and the schedule screen shows no sessions on the busy days once the plan is rebuilt.
+- Needs first: A4a (the settings tables), A5 (use the default settings until it is ready)
+
+**B14. Calendar button**
+- Type: Part of a page (a button and a short instructions panel)
+- Where it runs: Web app and phone app
+- Tools: Expo, Supabase database
+- What it means: A button that creates the student's calendar link if there is none yet and shows it, with steps for Google Calendar ("From URL") and Apple Calendar ("New Calendar Subscription"). A second button makes a new link and stops the old one working.
+- Done when: The link can be copied, and adding it to Google Calendar shows the student's sessions and exam dates.
+- Needs first: A7
 
 **B9. Handwriting trial**
 - Type: Trial (a written result, no product code)
 - Where it runs: A phone and a computer
-- Tools: Phone camera, the phone's built-in text reader (Google ML Kit, Apple Vision), Claude API (vision)
-- What it means: Take 20 photos of real student notes (handwritten and printed, in the languages your users write in). Try the phone's built-in text reader and Claude's vision on each. This decides how the camera feature is built and what each page costs.
+- Tools: Phone camera, the phone's built-in text reader (Google ML Kit, Apple Vision), Gemini API (vision)
+- What it means: Take 20 photos of real student notes (handwritten and printed, in the languages your users write in). Try the phone's built-in text reader and Gemini's vision on each. This decides how the camera feature is built and what each page costs.
 - Done when: A one-page result: correct pages out of 20 for each method, and seconds per page.
 - Needs first: nothing, can start any time in phase 1
 
@@ -339,7 +363,10 @@ Words used in the labels:
 - **A2 and B3:** Dev B's exam screen saves exams into the tables Dev A made.
 - **A4 and B5:** Dev B's confirm screen shows the dates Dev A's syllabus reader found.
 - **A5 and B6:** Dev B's schedule screen shows Dev A's plan.
-- **B4 and A6:** Dev A's question maker reads the notes Dev B's upload saved.
+- **B4 and A4a:** Dev B's upload button sends the file to Dev A's text extractor.
+- **A4a and A6:** Dev A's question maker starts by itself when the extractor has saved a note's text.
+- **A5 and B13:** Dev A's schedule engine uses the pace, days off and busy days Dev B's settings screen saves.
+- **A7 and B14:** Dev B's calendar button shows the link to Dev A's calendar feed.
 - **A6 and B7:** Dev B's study screen shows the questions Dev A made.
 - **A8 and B8:** Dev B's quiz screens talk to Dev A's quiz server. Agree on the messages between them before either starts.
 - **A9 and B10:** Dev A's first phone build must exist before Dev B starts the camera.
@@ -356,7 +383,7 @@ Timing: phase 1 is about 4 weeks of full-time work. Phase 2 is not estimated yet
 - **Web app:** upload files and the syllabus, see the schedule, study, host and play group quizzes, send sessions to a calendar.
 - **Phone app:** everything above except hosting, plus photographing paper notes and alarms.
 - **Server (Supabase):** the one "brain" both talk to. It stores data, calls the AI, and runs the live quiz.
-- **AI (Claude):** reads the syllabus, writes questions, and later lessons. It never decides the schedule and never adds to the notes.
+- **AI (Gemini):** reads the syllabus, writes questions, and later lessons. It gives each topic a first difficulty guess, but never decides the schedule and never adds to the notes.
 
 **The flow, step by step**
 
@@ -365,7 +392,7 @@ Timing: phase 1 is about 4 weeks of full-time work. Phase 2 is not estimated yet
 - The student adds notes: uploads files on the computer, or takes photos on the phone and presses Submit.
 - Files and photos are turned into text. The files and photos are deleted. Only text is kept.
 - The note text is cut into small numbered pieces ("chunks").
-- The server asks Claude to write questions from those chunks. Each question carries the number of the chunk it came from.
+- The server asks Gemini to write questions from those chunks. Each question carries the number of the chunk it came from.
 - Code checks each question's source really exists in that chunk. Failures are dropped.
 - The schedule engine places 5 to 7 question sessions on dates between today and each exam. The plan is saved on the server.
 - The sessions are sent to the student's calendar. The phone app also sets its own alarms.
@@ -379,7 +406,7 @@ Timing: phase 1 is about 4 weeks of full-time work. Phase 2 is not estimated yet
 - A date found by the AI is never saved until the student confirms it.
 - Photos never reach the gallery and never stay after Submit.
 - Cramrade sends to the calendar. It never reads it.
-- Note text does leave the device (to our server and to Claude). The app must tell the student this plainly.
+- Note text does leave the device (to our server and to Gemini). The app must tell the student this plainly.
 
 ---
 
@@ -414,11 +441,11 @@ Timing: phase 1 is about 4 weeks of full-time work. Phase 2 is not estimated yet
 - Cost: Included, with usage limits
 
 **Supabase Storage**
-- What it is for: Holds a handwritten photo for a few seconds while the AI reads it, then it is deleted.
+- What it is for: Holds an uploaded file or a handwritten photo for a few seconds while the text is pulled out, then it is deleted.
 - Cost: Included
 
-**Claude API**
-- What it is for: Reads the syllabus, writes the questions and lessons, and reads handwriting if the trial says the phone cannot.
+**Gemini API (Google)**
+- What it is for: Reads the syllabus, writes the questions and lessons, gives each topic a first difficulty guess, and reads handwriting if the trial says the phone cannot.
 - Cost: Pay per use. Cost per student not yet measured.
 
 **Google Play** (phase 2)

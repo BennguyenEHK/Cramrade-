@@ -131,19 +131,24 @@ npx supabase migration new add_something
 
 Write the SQL in the file it creates under `supabase/migrations/`, open a pull request, and merge it. The merge applies it to the real database at once, and there is no test copy, so read it carefully first.
 
-**New server function:**
+**New server function:** make the folder and its `index.ts` by hand, then add a block for it at the end of `supabase/config.toml`:
 
-```sh
-npx supabase functions new make-questions
+```toml
+[functions.make-questions]
+enabled = true
+verify_jwt = true
 ```
 
-It goes online when the pull request is merged.
+Do not use `npx supabase functions new`: it adds its own block with `verify_jwt = false`. A function that reads an AI prompt also needs `static_files = ["./functions/_shared/prompts/<name>.md"]` in its block. It goes online when the pull request is merged.
 
-**Store a secret for server functions** (for example the Claude API key):
+**Store a secret for server functions** (the Gemini API key and model name; the list is in `supabase/functions/.env.example`):
 
 ```sh
-npx supabase secrets set ANTHROPIC_API_KEY=your-key-here
+npx supabase secrets set GEMINI_API_KEY=your-key-here
+npx supabase secrets set GEMINI_MODEL=gemini-2.5-flash
 ```
+
+**Test a server function by hand** after it is live: see `supabase/functions/README.md`.
 
 **Sign-in settings** (site address, allowed redirect addresses, guest sign-in, email confirmation) are changed in the Supabase dashboard under Authentication. The same settings in `supabase/config.toml` only affect a local test stack.
 
@@ -194,10 +199,10 @@ Checked on Windows on 2026-10-05:
 
 Not checked yet:
 
-- `supabase functions new` and `supabase secrets set` have not been run on this project yet.
+- `supabase secrets set` was first used in task A4a. The first function (`extract-text`) goes live with that task's merge. Function folders are made by hand, not with `supabase functions new` (see "New server function" above).
 - The first automatic Supabase deploy from `main`.
 - Running the project on Mac or Linux.
-- Supabase server functions run on Deno, a different runtime from the app. Importing `packages/shared` into a server function has not been tested. If it is awkward, the schedule code moves to `supabase/functions/_shared/`.
+- Supabase server functions run on Deno, a different runtime from the app. Importing `packages/shared` into a server function has not been tested. If it is awkward, the schedule code moves to `supabase/functions/_shared/`. Server code that does not need Deno lives in `supabase/functions/_shared/` and is tested by `npm test` with the rest.
 - Commands for building the phone app (phase 2) are not listed yet.
 
 ---
@@ -239,9 +244,11 @@ Cramrade/
 │  ├─ config.toml
 │  ├─ migrations/             database tables and access rules
 │  └─ functions/              one folder per server function
-│     ├─ read-syllabus/  extract-text/  make-questions/
-│     ├─ score-answer/  calendar-feed/
-│     └─ _shared/             code several functions use
+│     ├─ extract-text/  read-syllabus/  make-questions/
+│     ├─ build-schedule/  calendar-feed/
+│     ├─ quiz-create/  quiz-start/  quiz-answer/  quiz-advance/
+│     ├─ _shared/             code several functions use (prompts/ inside)
+│     └─ _fixtures/           sample files for testing by hand
 │
 └─ docs/
 ```
