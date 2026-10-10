@@ -444,7 +444,3 @@ allowed_mime_types = [
 [functions.extract-text]
 enabled = true
 verify_jwt = true
-# The handler verifies the bearer token with Auth before reading any file.
-# This supports projects using asymmetric JWT signing keys too.
-[functions.extract-text]
-verify_jwt = false
