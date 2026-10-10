@@ -1,4 +1,4 @@
-# Shared package: the data shapes (T1 proposal)
+# Shared package: the data shapes and the schedule engine
 
 Dev A's proposal for task T1. Dev B reads it and says yes, or says what to change. After that, any change to `src/types/` needs both to agree.
 
@@ -99,7 +99,7 @@ The rules, one line each:
 3. A chunk answered correctly in 3 separate sessions is learned and only comes back in the final pass.
 4. Before any answers exist, chunks of topics rated 4 or 5 come first and those rated 1 or 2 last; after that the answers decide.
 5. A session has 5 to 7 questions from 2 to 3 topics of one exam: at least 2 never-seen chunks while any remain, then missed chunks, chunks due again and more new ones; a learned chunk only fills a session up to 5.
-6. At most one session per exam per day, never on a busy or kept day, never over the pace; when exams compete for a day, the closer exam wins.
+6. At most one session per exam per day, never on a busy day, never on a day that exam already has a kept session, never over the pace; when exams compete for a day, the closer exam wins.
 7. Sessions follow the gap rhythm from today; when the material does not fit, extra sessions are added and the plan says so.
 8. The day before each exam is a final pass that touches every topic once; exam day is empty.
 9. Missed sessions are not copied forward: the plan is rebuilt from today with the real answers.
