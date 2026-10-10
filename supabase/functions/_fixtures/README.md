@@ -7,7 +7,7 @@ All text is English and made up for testing.
 - `typed-notes.docx`: the same text as a Word file.
 - `notes-photosynthesis.md`: about 140 words of Markdown. extract-text makes 1 chunk.
 - `notes-scanned.pdf`: a PDF that is only a picture of text, with no text layer.
-- `try-extract.sh`: uploads one file and runs extract-text on it.
+- `try-extract.sh`: sends one file to extract-text as multipart/form-data and shows the note it made. Nothing goes to Storage.
 
 ## Making the PDF and Word files
 
@@ -29,6 +29,22 @@ From the top folder of the repo, in Git Bash, with a test account:
 ```sh
 export CRAMRADE_EMAIL=test@example.com CRAMRADE_PASSWORD=... SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 bash supabase/functions/_fixtures/try-extract.sh supabase/functions/_fixtures/typed-notes.txt text/plain
+# with an exam and as a syllabus: ... typed-notes.txt text/plain <exam id> true
+# repeat the same upload: UPLOAD_ID=<id from the first run> bash ...
 ```
 
-The expected answers for each file are in the A4a plan (`docs/superpowers/plans/2026-10-10-a4a-server-foundation.md`, last task).
+The script makes a new upload id (it becomes the note id), sends the file with the student's token, then prints the note row and its chunk count. It does the same as this call:
+
+```sh
+curl -s -X POST "$SB/functions/v1/extract-text" -H "Authorization: Bearer $TOKEN" -H "apikey: $KEY" \
+  -F "file=@supabase/functions/_fixtures/typed-notes.txt;type=text/plain" -F "uploadId=$UPLOAD_ID"
+```
+
+Expected answers:
+
+- `typed-notes.txt`, `typed-notes.pdf`, `typed-notes.docx`: `{"noteId":"<upload id>","status":"ready","chunks":10}`
+- `notes-photosynthesis.md`: `{"noteId":"<upload id>","status":"ready","chunks":1}`
+- `notes-scanned.pdf`: `{"noteId":"<upload id>","status":"failed","chunks":0,"reason":"no readable text, this looks like a scanned image"}`
+- The same upload id a second time: the same answer, and no new chunks.
+
+The A4a plan (`docs/superpowers/plans/2026-10-10-a4a-server-foundation.md`, last task) still shows the older call that read the file from Storage. The answers above replace it.
