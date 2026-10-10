@@ -11,3 +11,4 @@ web-build
 .npmrc
 .local-deps
 deno.lock
+.claude/worktrees

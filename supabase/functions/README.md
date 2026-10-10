@@ -11,7 +11,7 @@ Functions go live by themselves when a pull request is merged into `main`.
   - Deno files (`db.ts`, `auth.ts`, `ai.ts`, `invoke.ts`) read secrets and talk to the database. They are not unit tested; the hand tests below exercise them.
   - `prompts/`: one Markdown file per AI job, with `{{placeholders}}`. Each task that adds an AI job adds its prompt file here.
 - The quote rule: `quoteAppears` in `_shared/quote-check.ts` and the database trigger `private.verify_question` both collapse runs of spaces, tabs and line breaks to one space and trim the ends before looking for the quote. Change one, change the other.
-- `extract-text/`: turns an uploaded file into chunks of text (task A4a).
+- `extract-text/`: turns an uploaded file into chunks of text (task A4a, merged with Dev B's B4 upload). The app sends the file itself in the request; nothing goes to Storage. `parse.ts` is the only file that uses the PDF and Word libraries.
 - `_fixtures/`: sample files and a script for testing by hand.
 
 ## Secrets
@@ -56,13 +56,30 @@ curl -s "$SB/auth/v1/token?grant_type=password" -H "apikey: $KEY" -H "Content-Ty
 # copy access_token from the answer
 TOKEN=eyJ...
 
-curl -s -X POST "$SB/functions/v1/extract-text" -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" -d '{"noteId":"<note id>"}'
+UPLOAD_ID=$(node -e "console.log(crypto.randomUUID())")
+curl -s -X POST "$SB/functions/v1/extract-text" -H "Authorization: Bearer $TOKEN" -H "apikey: $KEY" \
+  -F "file=@supabase/functions/_fixtures/typed-notes.txt;type=text/plain" \
+  -F "uploadId=$UPLOAD_ID"
+# optional fields: -F "examId=<exam id>"  -F "isSyllabus=true"
 ```
 
-Errors always look like `{"error":{"code":"not_yours","message":"That note belongs to someone else."}}`, with status 400, 401, 403, 404, 409, 500 or 502 (the AI failed). A call with no token at all is refused by Supabase before our code runs, with its own 401 body.
+extract-text takes multipart/form-data, not JSON. Its fields:
 
-For extract-text, `_fixtures/try-extract.sh` does the whole round trip (sign in, create a note, upload, call, check the file is gone). See `_fixtures/README.md`.
+- `file`: exactly one file, PDF, Word (.docx), .txt or .md, at most 20 MB.
+- `uploadId`: a new UUID v4 made by the caller. It becomes the note's id. Sending the same one again does no new work and answers with the note as it is.
+- `examId` (optional): an exam the caller owns.
+- `isSyllabus` (optional): `true` or `false`, default `false`. A syllabus does not start make-questions.
+
+Expected answers, all with status 200:
+
+```json
+{"noteId":"<uploadId>","status":"ready","chunks":10}
+{"noteId":"<uploadId>","status":"failed","chunks":0,"reason":"no readable text, this looks like a scanned image"}
+```
+
+Errors always look like `{"error":{"code":"not_yours","message":"That exam is not yours."}}`, with status 400, 401, 403, 404, 409, 500 or 502 (the AI failed). A call with no token at all is refused by Supabase before our code runs, with its own 401 body.
+
+For extract-text, `_fixtures/try-extract.sh` does the whole round trip (sign in, send the file, show the note row and its chunk count). See `_fixtures/README.md`.
 
 ## Type-checking the functions (optional)
 
