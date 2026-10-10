@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@cramrade/shared": "^0.0.0",
     "@expo-google-fonts/atkinson-hyperlegible": "^0.4.1",
     "@expo-google-fonts/bricolage-grotesque": "^0.4.1",
     "@expo/ui": "~57.0.21",
@@ -34,6 +35,8 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "eslint": "9",
+    "eslint-config-expo": "~57.0.2",
     "typescript": "~6.0.3"
   },
   "scripts": {
