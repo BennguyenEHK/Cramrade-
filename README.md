@@ -10,24 +10,25 @@ Cramrade is "cram" plus "comrade": studying hard, together. Cramming is what stu
 
 ## Where the project stands
 
-Last updated 2026-10-06. The task-by-task status lives in `split_work.md`: finished tasks are marked DONE or PARTIALLY there, each with a Status line. This list is only the short version.
+Last updated 2026-10-10. The task-by-task status lives in `split_work.md`: finished tasks are marked DONE or PARTIALLY there, each with a Status line. This list is only the short version.
 
 Finished:
 
-- Project set up: one Expo app for web and phone, a shared package, a Supabase folder (task A1).
-- Database live on Supabase: 16 tables, each student sees only their own rows and their groups' rows (task A2).
-- Web app online at https://cramrade.expo.app with the homepage, theme and fonts (task A3).
-- Sign in and Workspace exist as placeholder screens, ready for the real ones.
+- Project set up: one Expo app for web and phone, a shared package, a Supabase folder (A1).
+- Database live on Supabase with Row Level Security (A2), plus the server-side tables and columns (A4a).
+- Web app online at https://cramrade.expo.app with automatic deploys from `main` (A3).
+- Data shapes agreed by both developers (T1).
+- Schedule engine: plain code, 66 tests (A5).
+- Sign-in, exam screen and the upload screens (B2, B3, B4) by Dev B.
 
-Waiting:
+Built, merged and live, waiting for their real-data checks:
 
-- Data shapes: the proposal is in `packages/shared/README.md` and needs Dev B's yes or no (task T1).
-- Web trial: the Expo web version runs and builds. PDF upload and a wide quiz-host layout still need testing (task B1).
+- Text extractor, syllabus reader, question maker, build-schedule, calendar feed, quiz server (A4a, A4, A5 server half, A6, A7, A8). What each still needs is in its Status line in `split_work.md`.
 
 Next up:
 
-- Dev B: B1 web trial, B2 sign-in, B3 exam screen.
-- Dev A: A4 syllabus reader, A5 schedule engine.
+- Dev A: run the hand tests above, then A9 (first phone build).
+- Dev B: B5 syllabus confirm screen, B6 schedule screen, B7 study screen, B8 quiz screens, plus the small B13 settings screen and B14 calendar button.
 
 ## Note for the team: the extract-text collision (2026-10-10)
 

@@ -155,8 +155,8 @@ Words used in the labels:
 - Done when: The empty app opens at a public web address, and a merged change shows up there without anyone uploading by hand.
 - Needs first: A1, B1
 
-**A4a. Text extractor**
-- Status: Merged with Dev B's B4 upload path on 2026-10-10: the file goes straight to the function, no Storage.
+**A4a. Text extractor** PARTIALLY
+- Status: Built and merged 2026-10-10 (pull request 2), live as `extract-text`. Merged with Dev B's B4 upload path: the file goes straight to the function, no Storage. Left: the live hand test with a PDF, a Word file and a scanned PDF (`supabase/functions/README.md`).
 - Type: Server function (an API) plus database changes
 - Where it runs: Server
 - Tools: Supabase Edge Function, Supabase Storage (temporary), `unpdf` (PDF), `mammoth` (Word), Supabase database
@@ -164,7 +164,8 @@ Words used in the labels:
 - Done when: A typed PDF, a Word file and a text file uploaded by a test account become ready notes with readable chunks, a scanned PDF becomes a failed note with the reason "no readable text, this looks like a scanned image", the uploads folder is empty afterwards every time, and Dev B has said yes to the data shape changes.
 - Needs first: T1, A2
 
-**A4. Syllabus reader (server part)**
+**A4. Syllabus reader (server part)** PARTIALLY
+- Status: Built and merged 2026-10-10 (pull request 3), live as `read-syllabus`. Validation has 18 tests; the prompt is `supabase/functions/_shared/prompts/read-syllabus.md`. Left: the live hand test with the two syllabus fixtures (real dates found, no dates reported honestly).
 - Type: Server function (an API)
 - Where it runs: Server
 - Tools: Supabase Edge Function, Gemini API
@@ -172,7 +173,8 @@ Words used in the labels:
 - Done when: A real syllabus returns the right dates and topics, and a file with no dates returns a clear "no dates found" answer.
 - Needs first: A4a (it reads the text the extractor saved)
 
-**A5. Schedule engine**
+**A5. Schedule engine** PARTIALLY
+- Status: Engine built and merged 2026-10-10 (pull request 1): plain code in `packages/shared/src/schedule`, 66 tests including the five Done-when cases. Server half merged too (pull request 7), live as `build-schedule`. Left: the live hand test (one exam in 14 days gives sessions ending the day before; mark one skipped and rebuild).
 - Type: Code function (pure logic) with automatic tests, plus the server function that runs it
 - Where it runs: Shared code, run by the server (`build-schedule`)
 - Tools: TypeScript, Vitest (test runner), Supabase Edge Function, Supabase database to save the plan, Gemini API (topic difficulty only)
@@ -180,7 +182,8 @@ Words used in the labels:
 - Done when: Given "exam in 14 days", it returns a plan that ends with a final pass the day before the exam and nothing on exam day. Tests cover: exam tomorrow, exam in 14 days, exam in 3 months, exam already past, two exams in the same week, a busy week, a skipped session, a piece answered right three times leaving the plan, a wrong answer coming back next session, and the same input always giving the same plan.
 - Needs first: T1 (the agreed data shapes), A4a (the database changes: study settings, busy days, topic difficulty)
 
-**A6. Question maker**
+**A6. Question maker** PARTIALLY
+- Status: Built and merged 2026-10-10 (pull request 4), live as `make-questions`; runs by itself when a note is ready. The prompt Dev A edits is `supabase/functions/_shared/prompts/make-questions.md`. Left: the live hand test (10 pages of notes give at least 20 verified questions, zero unverified).
 - Type: Server function (an API)
 - Where it runs: Server
 - Tools: Supabase Edge Function, Gemini API, Supabase database
@@ -188,7 +191,8 @@ Words used in the labels:
 - Done when: 10 pages of notes produce at least 20 questions, each with a working link to its source text. Questions without a real source are thrown away.
 - Needs first: A4a (real notes to read)
 
-**A7. Send to calendar**
+**A7. Send to calendar** PARTIALLY
+- Status: Server half built and merged 2026-10-10 (pull request 5), live as `calendar-feed`. Left: subscribe in Google Calendar and Apple Calendar and see sessions and exams; the app button is B14 (Dev B).
 - Type: Server function (a calendar link) plus a button in the app
 - Where it runs: Server, with one button in the app
 - Tools: Supabase Edge Function, the iCalendar (`.ics`) format, Expo
@@ -196,7 +200,8 @@ Words used in the labels:
 - Done when: On a test account, sessions and exam dates show up in Google Calendar and in Apple Calendar.
 - Needs first: A5
 
-**A8. Quiz server**
+**A8. Quiz server** PARTIALLY
+- Status: Built and merged 2026-10-10 (pull request 6), live as `quiz-create`, `quiz-start`, `quiz-answer`, `quiz-advance`; automatic pacing, solo mode, speed bonus. Client flow for Dev B: `supabase/functions/quiz-README.md`. Left: the five-player run of `scripts/quiz-e2e.mjs`.
 - Type: Server functions (APIs) plus a live channel
 - Where it runs: Server
 - Tools: Supabase Edge Functions, Supabase Realtime, Supabase database
