@@ -14,12 +14,13 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { TopBar } from '@/components/frame/top-bar';
+import { AuthProvider } from '@/features/auth/auth-provider';
 import { useTheme } from '@/hooks/use-theme';
 
 SplashScreen.preventAutoHideAsync();
 
 /**
- * The app shell: fonts, color scheme, the top bar, and the screen below it.
+ * The app shell: fonts, color scheme, sign-in state, the top bar, and the screen below it.
  * Screens live in this folder and stay thin.
  */
 export default function RootLayout() {
@@ -56,22 +57,24 @@ export default function RootLayout() {
   };
 
   return (
-    <ThemeProvider value={navigationTheme}>
-      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <View style={[styles.shell, { backgroundColor: colors.paper }]}>
-        <TopBar />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.paper },
-            animation: 'fade',
-          }}>
-          <Stack.Screen name="index" options={{ title: 'Cramrade' }} />
-          <Stack.Screen name="workspace" options={{ title: 'Workspace' }} />
-          <Stack.Screen name="sign-in" options={{ title: 'Sign in' }} />
-        </Stack>
-      </View>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider value={navigationTheme}>
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+        <View style={[styles.shell, { backgroundColor: colors.paper }]}>
+          <TopBar />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.paper },
+              animation: 'fade',
+            }}>
+            <Stack.Screen name="index" options={{ title: 'Cramrade' }} />
+            <Stack.Screen name="workspace" options={{ title: 'Workspace' }} />
+            <Stack.Screen name="sign-in" options={{ title: 'Sign in' }} />
+          </Stack>
+        </View>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 
