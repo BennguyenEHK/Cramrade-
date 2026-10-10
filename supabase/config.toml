@@ -447,3 +447,7 @@ verify_jwt = true
 [functions.quiz-create]
 enabled = true
 verify_jwt = true
+
+[functions.quiz-start]
+enabled = true
+verify_jwt = true
