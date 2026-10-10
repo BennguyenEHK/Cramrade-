@@ -443,3 +443,7 @@ allowed_mime_types = [
 [functions.extract-text]
 enabled = true
 verify_jwt = true
+
+[functions.build-schedule]
+verify_jwt = true
+static_files = ["./functions/_shared/prompts/rate-difficulty.md"]
