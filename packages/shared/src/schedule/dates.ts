@@ -1,0 +1,32 @@
+import type { DateOnly } from '../types';
+
+// Dates are "YYYY-MM-DD" strings, read as midnight UTC, so the engine gives the
+// same answer in every time zone and across daylight saving changes.
+// Two such strings also compare correctly with < and >.
+
+const DAY_MS = 86_400_000;
+const PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** "YYYY-MM-DD" to milliseconds at midnight UTC. Throws on anything else, including 2026-02-30. */
+export function dayToMs(day: DateOnly): number {
+  const match = PATTERN.exec(day);
+  if (!match) throw new Error(`Not a YYYY-MM-DD date: ${day}`);
+  const ms = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  if (isoDate(ms) !== day) throw new Error(`Not a real calendar date: ${day}`);
+  return ms;
+}
+
+/** Milliseconds to "YYYY-MM-DD", read in UTC. */
+export function isoDate(ms: number): DateOnly {
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+/** The day `n` days after `day` (before it when n is negative). */
+export function addDays(day: DateOnly, n: number): DateOnly {
+  return isoDate(dayToMs(day) + n * DAY_MS);
+}
+
+/** Whole days from `from` to `to`: 1 when `to` is the next day, negative when `to` is earlier. */
+export function daysBetween(from: DateOnly, to: DateOnly): number {
+  return Math.round((dayToMs(to) - dayToMs(from)) / DAY_MS);
+}
