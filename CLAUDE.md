@@ -43,7 +43,7 @@ Things that are easy to get wrong:
 
 - `npm run typecheck` fails on a fresh clone until the dev server has run once, because `apps/app/expo-env.d.ts` is generated on first start and is not committed.
 - "Cannot find native binding" from vitest is an npm optional-dependency bug. Fix: delete `node_modules` and `package-lock.json`, then `npm install`.
-- Server code that needs Deno or an `npm:` package cannot be unit tested; it is tested by hand against the live project after merge (`supabase/functions/README.md`). Do not install Deno for it. If Deno is already installed, `DENO_DIR=.local-deps/deno deno check <file>` type-checks a function with its cache kept on D:.
+- Server code that needs Deno or an `npm:` package cannot be unit tested; it is tested by hand against the live project after merge (`supabase/functions/README.md`). Do not install Deno for it. If Deno is already installed, `DENO_DIR=.local-deps/deno deno check --node-modules-dir=none <file>` type-checks a function with its cache kept on D:. The flag is needed because the repo has a root `node_modules`, which otherwise makes Deno look for `npm:` packages there.
 - `apps/app/AGENTS.md` holds Expo's own rules for AI tools. Follow it for anything touching Expo, EAS or React Native APIs: check the Expo SDK version in `apps/app/package.json` and read the matching versioned docs instead of relying on memory.
 - Auth, API and seed settings in `supabase/config.toml` are not applied to the live project. Live Auth settings (site URL, redirect URLs, anonymous sign-in) are changed in the Supabase dashboard.
 - Pushing to `main` deploys the web app (Expo workflow `apps/app/.eas/workflows/deploy.yml`) and the backend (Supabase GitHub integration). Task branches deploy nothing live.
