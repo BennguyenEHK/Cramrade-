@@ -449,3 +449,7 @@ verify_jwt = true
 enabled = true
 verify_jwt = true
 static_files = ["./functions/_shared/prompts/make-questions.md"]
+[functions.read-syllabus]
+enabled = true
+verify_jwt = true
+static_files = ["./functions/_shared/prompts/read-syllabus.md"]

@@ -100,6 +100,11 @@ Supabase dashboard, Edge Functions, pick the function, Logs. `console.error` lin
 What it checks: 10 pages of typed notes give at least 20 verified questions, no unverified question is left in the table, and calling `make-questions` again is safe.
 
 One-time setup (the read-syllabus hand test uses the same two steps, so skip them if you already did them there):
+## Hand test: read-syllabus (A4)
+
+What it checks: a syllabus with two exam dates gives exactly those two dates, each with a sentence copied from the file, and a syllabus with no dates gives `{ "found": false, "proposals": [] }`. The script also checks that a quiz given only as "Week 7", an assignment date and a "finals week" range are not reported.
+
+One-time setup:
 
 1. Make a test student: in the Supabase dashboard, Authentication, Users, "Add user", with an email and password, and tick "Auto confirm". For a local stack, sign up through the app instead.
 2. Create `supabase/functions/_handtests/.env` (it is ignored by git) with:
@@ -144,3 +149,7 @@ The words the AI sees are in `supabase/functions/_shared/prompts/make-questions.
 Other knobs, all in code or secrets rather than the prompt: questions per chunk and chunks per batch are `QUESTIONS_PER_CHUNK` and `BATCH_SIZE` in `_shared/questions.ts`; the temperature is the `{ temperature: 0.7 }` argument in `make-questions/index.ts`; the model is the `GEMINI_MODEL` secret (`npx supabase secrets set GEMINI_MODEL=<model name>`).
 
 Questions already made are not remade when the prompt changes. A note only gets new questions for chunks that have none.
+node --env-file=supabase/functions/_handtests/.env supabase/functions/_handtests/read-syllabus.mjs
+```
+
+It prints both answers and ends with `read-syllabus hand test passed`. It deletes the notes it made. The AI's titles and topic wording can vary between runs; the dates, the number of proposals and the copied sentences should not.
