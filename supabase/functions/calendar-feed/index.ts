@@ -5,18 +5,11 @@
 // token gets an empty 404 that says nothing about which tokens exist.
 // Cramrade only sends to the calendar; it never reads it.
 import { db } from '../_shared/db.ts';
+import { topicTitlesInOrder } from '../_shared/calendar-rows.ts';
 import { buildIcs, type IcsExam, type IcsSession } from '../_shared/ics.ts';
 
 const TOKEN = /^[0-9a-f]{64}$/;
 const SESSION_MINUTES = 20;
-const DAY_MS = 86_400_000;
-
-interface SessionRow {
-  id: string;
-  exam_id: string;
-  scheduled_for: string;
-  session_questions: { position: number; questions: { topics: { title: string } | null } | null }[];
-}
 
 function empty(status: number): Response {
   return new Response(null, { status });
@@ -42,21 +35,20 @@ Deno.serve(async (req) => {
   if (!feed) return empty(404);
 
   const now = new Date();
-  const yesterday = new Date(now.getTime() - DAY_MS);
 
   const [examsResult, sessionsResult] = await Promise.all([
     db
       .from('exams')
       .select('id, title, exam_date')
       .eq('owner_id', feed.user_id)
-      .gte('exam_date', yesterday.toISOString().slice(0, 10))
+      .gte('exam_date', now.toISOString().slice(0, 10))
       .order('exam_date'),
     db
       .from('study_sessions')
       .select('id, exam_id, scheduled_for, session_questions(position, questions(topics(title)))')
       .eq('owner_id', feed.user_id)
       .eq('status', 'planned')
-      .gte('scheduled_for', yesterday.toISOString())
+      .gte('scheduled_for', now.toISOString())
       .order('scheduled_for')
       .limit(1000),
   ]);
@@ -69,15 +61,11 @@ Deno.serve(async (req) => {
   const titleOf = new Map(examRows.map((e) => [e.id, e.title]));
   const exams: IcsExam[] = examRows.map((e) => ({ id: e.id, title: e.title, examDate: e.exam_date }));
 
-  const sessions: IcsSession[] = ((sessionsResult.data ?? []) as SessionRow[]).map((s) => {
-    const topicTitles = [...s.session_questions]
-      .sort((a, b) => a.position - b.position)
-      .map((sq) => sq.questions?.topics?.title)
-      .filter((title): title is string => Boolean(title));
+  const sessions: IcsSession[] = ((sessionsResult.data ?? [])).map((s) => {
     return {
       id: s.id,
       examTitle: titleOf.get(s.exam_id) ?? 'Exam',
-      topicTitles: [...new Set(topicTitles)],
+      topicTitles: topicTitlesInOrder(s.session_questions),
       startsAt: s.scheduled_for,
       minutes: SESSION_MINUTES,
     };
