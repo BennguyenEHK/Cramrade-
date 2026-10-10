@@ -42,6 +42,12 @@ interface BatchResult {
   remaining: number;
 }
 
+/** Log the real database error; the client only sees a generic 500. */
+function serverError(what: string, cause: unknown): never {
+  console.error(`make-questions: ${what} failed`, cause);
+  throw new HttpError(500, 'internal', 'Something went wrong on the server');
+}
+
 function readInput(body: unknown): { noteId: string; batchStart: number } {
   const input = (typeof body === 'object' && body !== null ? body : {}) as Record<string, unknown>;
   const noteId = input.noteId;
@@ -61,7 +67,7 @@ async function loadNote(noteId: string): Promise<NoteRow> {
     .select('id, owner_id, exam_id, status')
     .eq('id', noteId)
     .maybeSingle();
-  if (e) throw new HttpError(500, 'internal', e.message);
+  if (e) serverError('loading the note', e);
   if (!data) throw new HttpError(404, 'not_found', 'That note could not be found.');
   return data as NoteRow;
 }
@@ -71,8 +77,8 @@ async function runBatch(note: NoteRow, batchStart: number): Promise<BatchResult>
     db.from('chunks').select('id, position, text').eq('note_id', note.id).gte('position', batchStart).order('position'),
     db.from('questions').select('chunk_id').eq('note_id', note.id),
   ]);
-  if (chunksRes.error) throw new HttpError(500, 'internal', chunksRes.error.message);
-  if (askedRes.error) throw new HttpError(500, 'internal', askedRes.error.message);
+  if (chunksRes.error) serverError('loading chunks', chunksRes.error);
+  if (askedRes.error) serverError('loading questions', askedRes.error);
 
   const done = new Set((askedRes.data ?? []).map((r) => r.chunk_id as string));
   const { batch, nextStart, remaining } = pickBatch(chunksRes.data ?? [], done, batchStart, BATCH_SIZE);
@@ -81,7 +87,7 @@ async function runBatch(note: NoteRow, batchStart: number): Promise<BatchResult>
   let topics: { id: string; title: string }[] = [];
   if (note.exam_id) {
     const { data, error: e } = await db.from('topics').select('id, title').eq('exam_id', note.exam_id).order('position');
-    if (e) throw new HttpError(500, 'internal', e.message);
+    if (e) serverError('loading topics', e);
     topics = data ?? [];
   }
 
@@ -115,7 +121,7 @@ async function runBatch(note: NoteRow, batchStart: number): Promise<BatchResult>
     .from('questions')
     .select('chunk_id')
     .in('chunk_id', batch.map((c) => c.id));
-  if (nowAskedError) throw new HttpError(500, 'internal', nowAskedError.message);
+  if (nowAskedError) serverError('re-checking questions', nowAskedError);
   const taken = new Set((nowAsked ?? []).map((r) => r.chunk_id as string));
 
   const rows = [];
@@ -140,7 +146,7 @@ async function runBatch(note: NoteRow, batchStart: number): Promise<BatchResult>
   let made = 0;
   if (rows.length > 0) {
     const { data: inserted, error: insertError } = await db.from('questions').insert(rows).select('id, chunk_id, verified');
-    if (insertError) throw new HttpError(500, 'internal', insertError.message);
+    if (insertError) serverError('inserting questions', insertError);
     const unverified = (inserted ?? []).filter((r) => !r.verified);
     made = (inserted ?? []).length - unverified.length;
     if (unverified.length > 0) {

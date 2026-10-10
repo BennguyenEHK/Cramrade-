@@ -147,7 +147,10 @@ export function filterMadeQuestions(
 ): { keep: InsertableQuestion[]; dropped: DropReason[] } {
   const keep: InsertableQuestion[] = [];
   const dropped: DropReason[] = [];
-  if (!Array.isArray(made)) return { keep, dropped };
+  if (!Array.isArray(made)) {
+    console.warn('make-questions: AI returned no questions list');
+    return { keep, dropped };
+  }
 
   const chunkByPosition = new Map(chunks.map((c) => [c.position, c]));
   const topicIdByTitle = new Map(topics.map((t) => [t.title, t.id]));
