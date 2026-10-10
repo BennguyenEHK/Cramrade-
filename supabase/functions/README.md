@@ -95,6 +95,110 @@ Do not point it at the `*.test.ts` files: those are for vitest.
 
 Supabase dashboard, Edge Functions, pick the function, Logs. `console.error` lines from the code show up there.
 
+## build-schedule (A5)
+
+Builds and saves a student's study plan. A student calls it with their login; `make-questions` calls it with the service key and `{ "examId" }`. Test it on the live project after the pull request merges.
+
+What you need: a test account `schedule-test@example.com` (dashboard, Authentication, Add user, "Auto confirm" on), the project ref, the anon key, the service role key (Project Settings, API), and the Gemini secrets set.
+
+1. Seed an exam 14 days away, two topics (one with no difficulty), one note and 9 verified questions. Run this in the SQL editor:
+
+   ```sql
+   do $$
+   declare
+     uid uuid := (select id from auth.users where email = 'schedule-test@example.com');
+     texts text[] := array[
+       'Cells are the basic unit of life. The cell membrane controls what enters and leaves the cell.',
+       'Mitochondria release energy from glucose during cellular respiration. This energy is stored as ATP.',
+       'Genes are sections of DNA. Each gene carries the instructions for making one protein.'
+     ];
+     ex uuid; t1 uuid; t2 uuid; n uuid; c uuid;
+   begin
+     insert into public.exams (owner_id, title, exam_date) values (uid, 'Schedule test exam', current_date + 14) returning id into ex;
+     insert into public.topics (exam_id, title, position, difficulty) values (ex, 'Cells', 0, 3) returning id into t1;
+     insert into public.topics (exam_id, title, position) values (ex, 'Genes', 1) returning id into t2;
+     insert into public.notes (owner_id, title, source, status, exam_id) values (uid, 'Schedule test notes', 'text', 'ready', ex) returning id into n;
+     for i in 1..3 loop
+       insert into public.chunks (note_id, position, text) values (n, i - 1, texts[i]) returning id into c;
+       insert into public.questions (note_id, chunk_id, exam_id, topic_id, kind, prompt, answer, source_quote)
+       select n, c, ex, case when i < 3 then t1 else t2 end, 'flashcard',
+              'Question ' || k || ' on chunk ' || i, 'Answer ' || k, split_part(texts[i], '.', 1)
+       from generate_series(1, 3) as k;
+     end loop;
+     raise notice 'exam id: %', ex;
+   end $$;
+   ```
+
+2. Sign in and call the function:
+
+   ```bash
+   REF=<project ref>
+   ANON=<anon key>
+   TOKEN=$(curl -s "https://$REF.supabase.co/auth/v1/token?grant_type=password" \
+     -H "apikey: $ANON" -H "Content-Type: application/json" \
+     -d '{"email":"schedule-test@example.com","password":"<password>"}' | node -pe "JSON.parse(require('fs').readFileSync(0)).access_token")
+   curl -s -X POST "https://$REF.supabase.co/functions/v1/build-schedule" \
+     -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{}'
+   ```
+
+   You should get `sessions`, `warnings` and `rated: 1`.
+
+3. Check the plan in the SQL editor:
+
+   ```sql
+   select (s.scheduled_for at time zone 'UTC')::date as day, s.status, s.is_final_pass,
+          count(sq.question_id) as questions, e.exam_date
+   from public.study_sessions s
+   join public.exams e on e.id = s.exam_id
+   left join public.session_questions sq on sq.session_id = s.id
+   where e.title = 'Schedule test exam'
+   group by s.id, e.exam_date
+   order by s.scheduled_for;
+   ```
+
+   Every day is before the exam date. The last one is the day before, with `is_final_pass` true. Nothing is on the exam date. Normal sessions have 5 to 7 questions. The topic "Genes" now has a difficulty from 1 to 5.
+
+4. Skip the first planned session, call the function again (step 2), and rerun the query in step 3:
+
+   ```sql
+   update public.study_sessions set status = 'skipped'
+   where id = (
+     select s.id from public.study_sessions s join public.exams e on e.id = s.exam_id
+     where e.title = 'Schedule test exam' and s.status = 'planned'
+     order by s.scheduled_for limit 1
+   );
+   ```
+
+   The skipped session is still there, no planned session shares its day, and the rest of the plan has new ids.
+
+5. Errors: no login gives 401; `{"examId":"nope"}` gives 400 `bad_input`; an unknown exam id gives 404 `exam_not_found`.
+
+   ```bash
+   curl -s -o /dev/null -w "%{http_code}\n" -X POST "https://$REF.supabase.co/functions/v1/build-schedule" -d '{}'
+   curl -s -X POST "https://$REF.supabase.co/functions/v1/build-schedule" -H "Authorization: Bearer $TOKEN" -d '{"examId":"nope"}'
+   curl -s -X POST "https://$REF.supabase.co/functions/v1/build-schedule" -H "Authorization: Bearer $TOKEN" -d '{"examId":"00000000-0000-0000-0000-000000000000"}'
+   ```
+
+6. Service key, the way `make-questions` calls it. Keep the key in a shell variable only, never in a file:
+
+   ```bash
+   SERVICE=<service role key>
+   EXAM_ID=<exam id from step 1>
+   curl -s -X POST "https://$REF.supabase.co/functions/v1/build-schedule" \
+     -H "Authorization: Bearer $SERVICE" -H "Content-Type: application/json" -d "{\"examId\":\"$EXAM_ID\"}"
+   curl -s -X POST "https://$REF.supabase.co/functions/v1/build-schedule" \
+     -H "Authorization: Bearer $SERVICE" -H "Content-Type: application/json" -d '{}'
+   unset SERVICE
+   ```
+
+   The first call returns the student's sessions. The second returns 400 `bad_input`.
+
+7. Clean up:
+
+   ```sql
+   delete from public.notes where title = 'Schedule test notes';
+   delete from public.exams where title = 'Schedule test exam';
+   ```
 ## calendar-feed (A7)
 
 Sends a student's exams and planned study sessions to Google Calendar or Apple Calendar as a subscription link. It is public: the long random token in the link is the only key. Cramrade never reads the calendar. Test it on the live project after the pull request merges.

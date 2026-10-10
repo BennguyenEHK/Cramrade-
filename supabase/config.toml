@@ -445,6 +445,9 @@ allowed_mime_types = [
 enabled = true
 verify_jwt = true
 
+[functions.build-schedule]
+verify_jwt = true
+static_files = ["./functions/_shared/prompts/rate-difficulty.md"]
 [functions.quiz-create]
 enabled = true
 verify_jwt = true
