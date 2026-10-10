@@ -94,3 +94,27 @@ Do not point it at the `*.test.ts` files: those are for vitest.
 ## Logs
 
 Supabase dashboard, Edge Functions, pick the function, Logs. `console.error` lines from the code show up there.
+
+## Hand test: read-syllabus (A4)
+
+What it checks: a syllabus with two exam dates gives exactly those two dates, each with a sentence copied from the file, and a syllabus with no dates gives `{ "found": false, "proposals": [] }`. The script also checks that a quiz given only as "Week 7", an assignment date and a "finals week" range are not reported.
+
+One-time setup:
+
+1. Make a test student: in the Supabase dashboard, Authentication, Users, "Add user", with an email and password, and tick "Auto confirm". For a local stack, sign up through the app instead.
+2. Create `supabase/functions/_handtests/.env` (it is ignored by git) with:
+
+   ```
+   SUPABASE_URL=https://<project-ref>.supabase.co
+   SUPABASE_ANON_KEY=<publishable key from the dashboard, API settings>
+   TEST_EMAIL=<test student email>
+   TEST_PASSWORD=<test student password>
+   ```
+
+Run from the repo root:
+
+```sh
+node --env-file=supabase/functions/_handtests/.env supabase/functions/_handtests/read-syllabus.mjs
+```
+
+It prints both answers and ends with `read-syllabus hand test passed`. It deletes the notes it made. The AI's titles and topic wording can vary between runs; the dates, the number of proposals and the copied sentences should not.
