@@ -5,6 +5,7 @@ import { Page } from '@/components/frame/page';
 import { PageHead } from '@/components/frame/page-head';
 import { Section } from '@/components/frame/section';
 import { Button } from '@/components/ui/button';
+import { LinkButton } from '@/components/ui/link-button';
 import { AppText } from '@/components/ui/text';
 import { TextField } from '@/components/ui/text-field';
 import { Radius, Spacing } from '@/constants/theme';
@@ -72,6 +73,7 @@ export function ExamsScreen({ ownerId }: { ownerId: string }) {
   }
   return <Page><PageHead title="Your exams" /><Section style={styles.section}>
     <View style={styles.heading}><AppText variant="headline">Your exams</AppText><AppText tone="inkMuted">Start with the date you’re working toward. Your exams are saved to your account.</AppText></View>
+    <LinkButton href="/notes" variant="quiet">Your notes</LinkButton>
     {!!error && <AppText role="alert">{error}</AppText>}
     {!!message && <AppText accessibilityLiveRegion="polite">{message}</AppText>}
     <View style={[styles.columns, wide && styles.wide]}>

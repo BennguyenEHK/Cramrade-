@@ -262,7 +262,8 @@ Words used in the labels:
 - Done when: An exam can be added, edited, deleted, and is still there after reloading.
 - Needs first: A2, B2
 
-**B4. File upload**
+**B4. File upload** PARTIALLY
+- Status: Built 2026-10-10 on `b4-file-upload`, stacked on `b3-exam-screen`. Notes screen, picker, extracted-text reader, authenticated `extract-text` Edge Function and atomic note-save migration are ready for review. Eight extraction/HTTP tests and isolated PostgreSQL checks pass. The live function returns NOT_FOUND, so Dev A must review and deploy the backend before the live PDF/Word save-and-reload check can pass. Details and limits: `apps/app/B4-checks.md`.
 - Type: Part of a page (upload button) plus a server function
 - Where it runs: Web app and phone app, with the text work on the server
 - Tools: Expo document picker, Supabase Edge Function, Supabase database
