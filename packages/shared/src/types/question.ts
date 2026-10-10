@@ -1,7 +1,8 @@
 import type { Id, Timestamp } from './common';
 
 /** The form of the question on the screen. */
-export type QuestionKind = 'multiple_choice' | 'short_answer' | 'flashcard';
+export const QUESTION_KINDS = ['multiple_choice', 'short_answer', 'flashcard'] as const;
+export type QuestionKind = (typeof QUESTION_KINDS)[number];
 
 /**
  * One question made from the student's notes. Written only by the server

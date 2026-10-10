@@ -1,7 +1,8 @@
 import type { Id, Timestamp } from './common';
 
 /** Whether the student has played the session yet. */
-export type StudySessionStatus = 'planned' | 'done' | 'skipped';
+export const STUDY_SESSION_STATUSES = ['planned', 'done', 'skipped'] as const;
+export type StudySessionStatus = (typeof STUDY_SESSION_STATUSES)[number];
 
 /**
  * One short study session (5 to 7 questions) on the plan for one exam. The

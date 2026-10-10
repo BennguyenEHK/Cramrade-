@@ -1,10 +1,12 @@
 import type { DateOnly, Id, Timestamp } from './common';
 
 /** How important the date is. All three get a study plan; the word only changes what the screen shows. */
-export type ExamKind = 'exam' | 'quiz' | 'competition';
+export const EXAM_KINDS = ['exam', 'quiz', 'competition'] as const;
+export type ExamKind = (typeof EXAM_KINDS)[number];
 
 /** Where the exam came from: typed by the student, or found in a syllabus and confirmed by the student. */
-export type ExamSource = 'manual' | 'syllabus';
+export const EXAM_SOURCES = ['manual', 'syllabus'] as const;
+export type ExamSource = (typeof EXAM_SOURCES)[number];
 
 /**
  * A dated test the student is studying for. The study plan ends on examDate.

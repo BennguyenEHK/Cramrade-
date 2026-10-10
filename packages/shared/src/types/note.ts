@@ -1,10 +1,12 @@
 import type { Id, Timestamp } from './common';
 
 /** How the text arrived. The file or photo itself is thrown away after the text is pulled out. */
-export type NoteSource = 'file' | 'photo' | 'text';
+export const NOTE_SOURCES = ['file', 'photo', 'text'] as const;
+export type NoteSource = (typeof NOTE_SOURCES)[number];
 
 /** Where the note is in the pipeline from upload to questions. */
-export type NoteStatus = 'processing' | 'ready' | 'failed';
+export const NOTE_STATUSES = ['processing', 'ready', 'failed'] as const;
+export type NoteStatus = (typeof NOTE_STATUSES)[number];
 
 /**
  * One set of study notes, stored as text only. Never the original file, never

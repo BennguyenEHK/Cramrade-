@@ -15,3 +15,12 @@ export type {
   QuizAnswer,
 } from './quiz';
 export type { CalendarFeed } from './calendar';
+
+// The allowed-value lists behind the union types, for pickers and checks.
+// Agreed in T1 (2026-10-10): screens read these instead of typing the values again.
+export { EXAM_KINDS, EXAM_SOURCES } from './exam';
+export { GROUP_ROLES } from './group';
+export { NOTE_SOURCES, NOTE_STATUSES } from './note';
+export { QUESTION_KINDS } from './question';
+export { QUIZ_ROOM_STATUSES } from './quiz';
+export { STUDY_SESSION_STATUSES } from './session';

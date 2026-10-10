@@ -94,6 +94,8 @@ These are decisions, not suggestions. Do not change them without both developers
 
 Before changing a file outside your developer's area, stop and say so. Changes to the data shapes in `packages/shared` need both developers to agree, because both sides build against them.
 
+Data shape decisions agreed in T1 (2026-10-10), do not reopen them: camelCase fields in TypeScript, snake_case columns in the database, the app maps between them; `Note.status` and `QuizRoom.secondsPerQuestion` stay; `Attempt.sessionId` may be null; allowed-value lists are exported as constants (`EXAM_KINDS` and friends) and the union types derive from them.
+
 ## Working rules
 
 - This repository is public. Keys and secrets live in `.env` files that are never committed. If a secret appears in a diff, stop before committing.

@@ -56,9 +56,13 @@ Seen by: the host and the players in the room. A player sees only their own answ
 
 `userId` and a random `token` made by the database; the calendar link carries the token. Delete and recreate the row for a new link. Seen by the student only.
 
-## For Dev B to decide
+## Decided (T1 closed on 2026-10-10)
 
-- camelCase fields mean mapping from the snake_case rows supabase-js returns. Alternative: snake_case in the types too, no mapping.
-- `Note.status` and `QuizRoom.secondsPerQuestion` were added beyond the first list. Keep or drop?
-- `Attempt.sessionId` is nullable so on-demand reviews (B7) can be saved. Fine?
-- Want the allowed-value lists (for pickers) exported as constants too?
+Both developers agreed:
+
+1. **Field names are camelCase in TypeScript** (`examDate`) **and snake_case in the database** (`exam_date`). The app maps between them when it reads or writes rows (Dev B writes that mapping, in `apps/app/src/lib`). Server code maps the same way.
+2. **`Note.status` and `QuizRoom.secondsPerQuestion` stay.**
+3. **`Attempt.sessionId` may be null**, for a review outside the plan.
+4. **The allowed-value lists are exported as constants** next to each type: `EXAM_KINDS`, `EXAM_SOURCES`, `GROUP_ROLES`, `NOTE_SOURCES`, `NOTE_STATUSES`, `QUESTION_KINDS`, `QUIZ_ROOM_STATUSES`, `STUDY_SESSION_STATUSES`. Pickers read from these. The types are derived from the lists, so they cannot drift apart.
+
+From here on, any change to `src/types/` needs a yes from both developers and a matching database migration.

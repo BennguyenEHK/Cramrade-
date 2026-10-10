@@ -1,7 +1,8 @@
 import type { Id, Timestamp } from './common';
 
 /** What a member may do in a group. The owner created it and is the only one who can change or delete it. */
-export type GroupRole = 'owner' | 'member';
+export const GROUP_ROLES = ['owner', 'member'] as const;
+export type GroupRole = (typeof GROUP_ROLES)[number];
 
 /**
  * A study group: a few classmates who share exams, notes and quizzes.

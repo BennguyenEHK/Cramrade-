@@ -1,7 +1,8 @@
 import type { Id, Timestamp } from './common';
 
 /** Where the live quiz is: waiting for players, playing, or over. */
-export type QuizRoomStatus = 'lobby' | 'running' | 'finished';
+export const QUIZ_ROOM_STATUSES = ['lobby', 'running', 'finished'] as const;
+export type QuizRoomStatus = (typeof QUIZ_ROOM_STATUSES)[number];
 
 /**
  * One live group quiz. The host opens it on the web, players join with the

@@ -83,12 +83,18 @@ Words used in the labels:
 
 **Focus: agree on the rules before splitting up, and test with real students at the end of phase 1.**
 
-**T1. Agree on the data shapes** PARTIALLY
-- Status: Started. `packages/shared/src/types/` exists but is empty until the shapes are written down and both have agreed.
+**T1. Agree on the data shapes** DONE
+- Status: Done 2026-10-10. The shapes are in `packages/shared/src/types/` (one file per area: profile, group, exam, note, question, session, quiz, calendar), explained in plain words in `packages/shared/README.md`, and match the 16 database tables from A2 one to one. Dev B answered the four open questions and both agreed.
+- **AGREED, BOTH DEVELOPERS, 2026-10-10. THESE FOUR DECISIONS ARE FIXED:**
+  1. **CAMELCASE IN TYPESCRIPT, SNAKE_CASE IN THE DATABASE. THE APP MAPS BETWEEN THEM** (Dev B writes the mapping in `apps/app/src/lib`).
+  2. **`Note.status` AND `QuizRoom.secondsPerQuestion` STAY.**
+  3. **`Attempt.sessionId` MAY BE NULL** (a review outside the plan).
+  4. **THE ALLOWED-VALUE LISTS ARE EXPORTED AS CONSTANTS** (`EXAM_KINDS`, `QUESTION_KINDS`, and so on). Pickers read from them instead of typing the values again.
+  **ANY LATER CHANGE TO `packages/shared/src/types/` NEEDS A YES FROM BOTH DEVELOPERS AND A MATCHING DATABASE MIGRATION.**
 - Type: Code file (the list of data shapes)
 - Where it runs: Shared by the web app, the phone app and the server
 - Tools: TypeScript
-- What it means: Sit together and write down what an Exam, a Topic, a Note, a Question, a Study Session and a Quiz look like (which fields each has). Example: an Exam has a name, a date and a list of topics. Both sides build against these, so nobody waits for the other.
+- What it means: A data shape is the list of fields one thing has. Example: an Exam has a title, a date, a kind (exam, quiz or competition) and a list of topics; a Question has a prompt, an answer and the exact quote from the notes it came from. The shapes are written once as TypeScript types in `packages/shared`, and every part of the project imports them: Dev B's screens show them, Dev A's server code fills them, and the database tables mirror them. That is why both must agree: if Dev B's screen expects a field Dev A's server never sends, nothing works. Once agreed, each side can build its half alone with fake data in the right shape, and the halves fit when joined. After agreement, any change to a shape needs a yes from both and a matching database migration.
 - Done when: The shapes are in `packages/shared` and both of you have said yes.
 
 **T2. Create the accounts** DONE
@@ -140,8 +146,8 @@ Words used in the labels:
 - Done when: Tables exist, a test row can be saved and read back, and one test user cannot read another's row.
 - Needs first: T1, A1
 
-**A3. Put the web app online** PARTIALLY
-- Status: Live at https://cramrade.expo.app since 2026-10-05 (Expo project `@cramrade/cramrade`). App shell, theme, homepage, placeholder screens and deploy files are in `main`. Left: connect the GitHub repo in the Expo dashboard (project Settings, GitHub, base directory `apps/app`) so a merge into `main` deploys by itself, then validate `.eas/workflows/deploy.yml`. Until then, deploy by hand with the commands in `apps/app/README.md`.
+**A3. Put the web app online** DONE
+- Status: Done 2026-10-06. Live at https://cramrade.expo.app (Expo project `@cramrade/cramrade`). GitHub is connected to Expo and Supabase: a merge into `main` deploys the web app (Expo workflow `apps/app/.eas/workflows/deploy.yml`, only when files under `apps/app`, `packages/shared` or the root package files change) and applies new database migrations and server functions (Supabase "Deploy to production"). Every pull request gets its own preview address. Checked: three merges into `main` on 2026-10-06 each produced a successful automatic deploy. Note: a deploy can take a while to leave Expo's queue, so give it time before assuming it failed; the runs are listed at https://expo.dev/accounts/cramrade/projects/cramrade/workflows.
 - Type: Deployment setup (settings, no product code)
 - Where it runs: The web host
 - Tools: Expo hosting (EAS Hosting), Expo workflows, GitHub
