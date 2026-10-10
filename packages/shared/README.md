@@ -66,3 +66,40 @@ Both developers agreed:
 4. **The allowed-value lists are exported as constants** next to each type: `EXAM_KINDS`, `EXAM_SOURCES`, `GROUP_ROLES`, `NOTE_SOURCES`, `NOTE_STATUSES`, `QUESTION_KINDS`, `QUIZ_ROOM_STATUSES`, `STUDY_SESSION_STATUSES`. Pickers read from these. The types are derived from the lists, so they cannot drift apart.
 
 From here on, any change to `src/types/` needs a yes from both developers and a matching database migration.
+
+## Schedule engine
+
+`buildSchedule(input)` in `src/schedule/` turns exams, notes, answers and the student's free days into a list of short study sessions. It is plain code, not AI: the same input always gives the same plan. The server function `build-schedule` collects the input from the database, calls it, and saves the sessions, so the web app and the phone show the same plan.
+
+What goes in (`ScheduleInput` in `src/types/schedule.ts`):
+
+- `today`: the first day that may get a session. The engine never reads the clock.
+- `exams`: every upcoming exam, each with its date, its topics (with the AI's difficulty guess, 1 to 5, or none) and its chunks of notes. Each chunk lists its checked questions, least recently asked first, and its history: how many separate sessions had a correct answer, the last day it was seen, and whether the last answer was right.
+- `pace`: light, normal or heavy, meaning at most 1, 2 or 3 sessions a day across all exams.
+- `busyDays`: days with no studying at all.
+- `keep`: sessions already done or skipped. Their day stays taken.
+
+What comes out: `sessions` (day, exam, 5 to 7 question ids in order, the topics, and whether it is the final pass) and `warnings`. Each warning has a `code` (`exam_past`, `no_questions`, `load_increased`, `not_enough_days`) and the `examId` it is about, so the screen can name the exam; a `no_questions` warning about one chunk also has its `chunkId`.
+
+The rules, one line each:
+
+1. Plan from today up to the last exam; nothing on or after an exam's date; a past exam gets no sessions and a warning.
+2. A chunk comes back after about a fifth of the days left (daily in the last week, at most every 14 days), or at once if the last answer was wrong.
+3. A chunk answered correctly in 3 separate sessions is learned and only comes back in the final pass.
+4. Before any answers exist, chunks of topics rated 4 or 5 come first and those rated 1 or 2 last; after that the answers decide.
+5. A session has 5 to 7 questions from 2 to 3 topics of one exam: at least 2 never-seen chunks while any remain, then missed chunks, chunks due again and more new ones; a learned chunk only fills a session up to 5.
+6. At most one session per exam per day, never on a busy or kept day, never over the pace; when exams compete for a day, the closer exam wins.
+7. Sessions follow the gap rhythm from today; when the material does not fit, extra sessions are added and the plan says so.
+8. The day before each exam is a final pass that touches every topic once; exam day is empty.
+9. Missed sessions are not copied forward: the plan is rebuilt from today with the real answers.
+10. A session counts as done once one question is answered (the app and server apply this; the engine only reads the result).
+11. Same input, same output: no randomness, no clock.
+
+The plan assumes each planned question will be answered correctly. When it is not, the next rebuild brings that chunk back (rule 9).
+
+Run the tests from the repo's top folder:
+
+```sh
+npm test                                                     # every test
+npx vitest run packages/shared/src/schedule/build.test.ts    # just the engine scenarios
+```
