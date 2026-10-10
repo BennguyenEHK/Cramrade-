@@ -140,6 +140,11 @@ Sends a student's exams and planned study sessions to Google Calendar or Apple C
    ```sql
    delete from public.exams where title in ('Calendar test exam', 'Schedule test exam');
    ```
+## Hand test: make-questions (A6)
+
+What it checks: 10 pages of typed notes give at least 20 verified questions, no unverified question is left in the table, and calling `make-questions` again is safe.
+
+One-time setup (the read-syllabus hand test uses the same two steps, so skip them if you already did them there):
 ## Hand test: read-syllabus (A4)
 
 What it checks: a syllabus with two exam dates gives exactly those two dates, each with a sentence copied from the file, and a syllabus with no dates gives `{ "found": false, "proposals": [] }`. The script also checks that a quiz given only as "Week 7", an assignment date and a "finals week" range are not reported.
@@ -159,6 +164,36 @@ One-time setup:
 Run from the repo root:
 
 ```sh
+node --env-file=supabase/functions/_handtests/.env supabase/functions/_handtests/make-questions.mjs
+```
+
+It uploads `_fixtures/typed-notes.pdf`, waits until the question count stops growing (a few minutes), and ends with `make-questions hand test passed: <n> verified questions for note <id>`. Pass another fixture name as the last argument to try a different file. The note is kept, so the quiz tests can use its questions.
+
+`typed-notes.pdf` is not in the repo until Dev A makes it (see `_fixtures/README.md`). Until then, run the same test on the text version by adding `typed-notes.txt` as the last argument. It gives the same 10 chunks.
+
+To double-check in the database, open the Supabase dashboard, SQL Editor, and run (with the note id the script printed):
+
+```sql
+select count(*) from questions where note_id = '<note id>' and verified;
+select kind, count(*) from questions where note_id = '<note id>' group by kind;
+```
+
+The first number must be at least 20. The second shows the mix of question kinds.
+
+To see what was dropped and why, open the dashboard, Edge Functions, make-questions, Logs. Each batch writes one line with how many questions were made and dropped.
+
+## How Dev A tunes the questions
+
+The words the AI sees are in `supabase/functions/_shared/prompts/make-questions.md`. It is a plain text file: changing it changes the questions, with no code change.
+
+1. Edit the file. Typical changes: more or fewer short-answer questions, harder wrong options, a stricter rule on what a good quote is. Keep the field names (`chunkPosition`, `kind`, `prompt`, `choices`, `answer`, `sourceQuote`, `topicTitle`) and the three placeholders (`{{chunks}}`, `{{topics}}`, `{{questionsPerChunk}}`) exactly as they are; the code depends on them.
+2. Try it before merging, on a local stack: `npx supabase start`, then `npx supabase functions serve --env-file supabase/functions/.env`, then run the hand test with the local address in `_handtests/.env`. The local functions read the prompt file straight from your folder, so each edit takes effect on the next run.
+3. Run the hand test again. It always uploads a new copy of the notes, so you compare a fresh set of questions each time. Read the five sample questions it prints and check the count.
+4. When you like the result, open a pull request with the prompt change. Merging it to `main` deploys it.
+
+Other knobs, all in code or secrets rather than the prompt: questions per chunk and chunks per batch are `QUESTIONS_PER_CHUNK` and `BATCH_SIZE` in `_shared/questions.ts`; the temperature is the `{ temperature: 0.7 }` argument in `make-questions/index.ts`; the model is the `GEMINI_MODEL` secret (`npx supabase secrets set GEMINI_MODEL=<model name>`).
+
+Questions already made are not remade when the prompt changes. A note only gets new questions for chunks that have none.
 node --env-file=supabase/functions/_handtests/.env supabase/functions/_handtests/read-syllabus.mjs
 ```
 

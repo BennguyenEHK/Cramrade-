@@ -448,6 +448,10 @@ verify_jwt = true
 [functions.calendar-feed]
 # Calendar apps cannot send a login. The token in the link is the key.
 verify_jwt = false
+[functions.make-questions]
+enabled = true
+verify_jwt = true
+static_files = ["./functions/_shared/prompts/make-questions.md"]
 [functions.read-syllabus]
 enabled = true
 verify_jwt = true
