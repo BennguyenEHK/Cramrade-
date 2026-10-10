@@ -44,5 +44,11 @@ export interface Topic {
   title: string;
   /** Order on the screen, starting at 0. */
   position: number;
+  /**
+   * The AI's first guess at how hard the topic is, 1 (easy) to 5 (hard).
+   * Set by the server, used by the schedule only until the student has
+   * answered questions on it. Null until rated.
+   */
+  difficulty: 1 | 2 | 3 | 4 | 5 | null;
   createdAt: Timestamp;
 }

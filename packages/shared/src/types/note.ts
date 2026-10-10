@@ -26,6 +26,12 @@ export interface Note {
   originalFilename: string | null;
   /** 'processing' while text is being extracted and questions made, then 'ready' or 'failed'. */
   status: NoteStatus;
+  /** The exam these notes are for. Questions made from the note are linked to it. Null when not linked. */
+  examId: Id | null;
+  /** True when the file is a syllabus: the server reads dates from it instead of making questions. */
+  isSyllabus: boolean;
+  /** Why text extraction failed, one line to show the student. Null unless status is 'failed'. */
+  failureReason: string | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
