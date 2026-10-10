@@ -244,7 +244,8 @@ Words used in the labels:
 - Done when: A test page in Chrome uploads a PDF and shows a full-width screen. A short note says "works" or "does not work, because".
 - Needs first: A1
 
-**B2. Sign-in**
+**B2. Sign-in** PARTIALLY
+- Status: Built 2026-10-10, branch `b2-sign-in`. Sign-up, sign-in, sign-out and the account page work in the browser, and the top bar shows "Account" when signed in. Checked in Microsoft Edge against a stand-in for Supabase sign-in, because the live keys were not on the test computer: 16 of 16 checks passed, including closing the whole browser, reopening it and still being signed in. Left: run the same check against the live Supabase project once `apps/app/.env` has the two values. Dev A also needs to make sure those two values are set in the Expo project's environment variables (preview and production), or the hosted app will say sign-in is not connected.
 - Type: App screens (sign-up page and log-in page)
 - Where it runs: Web app and phone app
 - Tools: Expo, Supabase Auth (email sign-in)
@@ -252,7 +253,8 @@ Words used in the labels:
 - Done when: A new user can sign up in a browser, close the tab, come back, and still be logged in.
 - Needs first: A1, T2
 
-**B3. Exam screen**
+**B3. Exam screen** DONE
+- Status: Done 2026-10-10 on `b3-exam-screen`. The signed-in Workspace supports adding, editing and deleting exams, quizzes and competitions, with a calendar date picker. Create, edit and delete were checked against live Supabase with a reload after each action; the temporary test exam was removed. Date checks, type checking, lint and the web build passed. Details: `apps/app/B3-checks.md`.
 - Type: App screen (a page)
 - Where it runs: Web app and phone app
 - Tools: Expo (React Native), Supabase database
@@ -260,7 +262,8 @@ Words used in the labels:
 - Done when: An exam can be added, edited, deleted, and is still there after reloading.
 - Needs first: A2, B2
 
-**B4. File upload**
+**B4. File upload** PARTIALLY
+- Status: Built 2026-10-10 on `b4-file-upload`, stacked on `b3-exam-screen`. Notes screen, picker, extracted-text reader, authenticated `extract-text` Edge Function and atomic note-save migration are ready for review. Eight extraction/HTTP tests and isolated PostgreSQL checks pass. The live function returns NOT_FOUND, so Dev A must review and deploy the backend before the live PDF/Word save-and-reload check can pass. Details and limits: `apps/app/B4-checks.md`.
 - Type: Part of a page (upload button) plus a server function
 - Where it runs: Web app and phone app, with the text work on the server
 - Tools: Expo document picker, Supabase Edge Function, Supabase database

@@ -1,3 +1,4 @@
+import { type Href } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { Page } from '@/components/frame/page';
@@ -10,13 +11,15 @@ import { Layout, Spacing } from '@/constants/theme';
 type Props = {
   title: string;
   text: string;
+  /** Main way onward. When set, it is shown as the main button above the homepage link. */
+  link?: { href: Href; label: string };
 };
 
 /**
  * A stand-in screen for a feature that is not built yet.
- * Used by the workspace and sign-in routes until Dev B replaces them.
+ * Used by the workspace route until tasks B3 to B7 replace it.
  */
-export function Placeholder({ title, text }: Props) {
+export function Placeholder({ title, text, link }: Props) {
   return (
     <Page>
       <PageHead title={title} />
@@ -24,9 +27,12 @@ export function Placeholder({ title, text }: Props) {
         <View style={styles.copy}>
           <AppText variant="headline">{title}</AppText>
           <AppText tone="inkMuted">{text}</AppText>
-          <LinkButton href="/" variant="quiet" style={styles.back}>
-            Back to the homepage
-          </LinkButton>
+          <View style={styles.actions}>
+            {link && <LinkButton href={link.href}>{link.label}</LinkButton>}
+            <LinkButton href="/" variant="quiet">
+              Back to the homepage
+            </LinkButton>
+          </View>
         </View>
       </Section>
     </Page>
@@ -38,7 +44,10 @@ const styles = StyleSheet.create({
     maxWidth: Layout.proseMaxWidth,
     gap: Spacing.md,
   },
-  back: {
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
     marginTop: Spacing.md,
   },
 });
